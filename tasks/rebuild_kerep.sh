@@ -1,3 +1,3 @@
 #!/bin/bash
-touch .rebuild_kerep
-printf "kerep.a will be rebuilt in the next build task"
+touch .rebuild_kerep.tmp
+myprint "${YELLOW}kerep.a will be rebuilt in the next build task"

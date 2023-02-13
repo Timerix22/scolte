@@ -1,12 +1,16 @@
-# Build results
+# build results
 bin/
 obj/
+*.log
+*.tmp
 
-# user files
-.old*/
+# IDE files
 .vs/
 .vshistory/
 .editorconfig
 *.user
 *.vcxproj.filters
+
+# other files
+.old*/
 current.config

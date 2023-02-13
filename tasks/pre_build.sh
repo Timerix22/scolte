@@ -1,13 +1,17 @@
 #!/bin/bash
 
-if [ ! -f "kerep/bin/kerep.a" ]  || [ -f .rebuild_kerep ] 
-then
+# check if kerep static lib exists or kerep_rebuild task was executed
+if [ ! -f "$OBJDIR/libs/kerep.a" ] || [ -f .rebuild_kerep.tmp ]; then
+    [[ -z "$KEREP_BUILD_TASK" ]] && error "KEREP_BUILD_TASK is empty" 
+    myprint "${BLUE}making kerep task <$KEREP_BUILD_TASK>"
+
     cd kerep
     if ! make "$KEREP_BUILD_TASK"; then
         exit 1
     fi
     cd ..
-    rm -rf .rebuild_kerep
+
+    cp kerep/bin/kerep.a $OBJDIR/libs/
+    myprint "${GREEN}copied ${CYAN}kerep.a"
+    rm .rebuild_kerep.tmp
 fi
-cp kerep/bin/kerep.a obj/
-printf "${GREEN}copied ${CYAN}kerep.a\n"
