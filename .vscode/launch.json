@@ -5,7 +5,7 @@
             "name": "(gdb) Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/scolte.exe",
+            "program": "${workspaceFolder}/bin/scolte",
             "preLaunchTask": "build_exec_dbg",
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/bin",
