@@ -8,6 +8,7 @@ extern "C" {
 #include "../kerep/src/String/string.h"
 #include "../kerep/src/kprint/kprint_colors.h"
 #include "../kerep/src/Array/Array.h"
+#include "terminal.h"
 
 
 /// initializes type descriptors for this project's types
@@ -42,8 +43,7 @@ PACKED_ENUM(UIBorderType,
 //          Small structs           //
 //////////////////////////////////////
 
-/// Rectangle
-STRUCT(Rect,
+STRUCT(DrawingArea,
     /* right-top corner */
     u16 x; u16 y;
     u16 w; u16 h;
@@ -62,7 +62,7 @@ STRUCT(UIBorderParams,
 
 typedef struct UIElement UIElement;
 typedef UIElement* UIElementPtr;
-typedef void (*UIElement_draw_t)(UIElement* self,Rect place);
+typedef void (*UIElement_draw_t)(UIElement* self,DrawingArea place);
 
 #define UIElement_stretch (u16)-1
 

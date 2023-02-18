@@ -6,7 +6,7 @@ void TextBlock_freeMembers(void* _self){
     free(self->text.ptr);
 }
 
-void TextBlock_draw(UIElement* _self, Rect place){
+void TextBlock_draw(UIElement* _self, DrawingArea place){
     TextBlock* self=(TextBlock*)_self;
     fputs(self->text.ptr, stdout);
 }
@@ -14,8 +14,8 @@ void TextBlock_draw(UIElement* _self, Rect place){
 kt_define(TextBlock, TextBlock_freeMembers, NULL);
 
 TextBlock* TextBlock_create(string text){
-    TextBlock* TextBlock=malloc(sizeof(TextBlock));
-    TextBlock->base=__UIElement_createDefault(ktid_name(TextBlock), TextBlock_draw);
-    TextBlock->text=string_copy(text);
-    return TextBlock;
+    TextBlock* textBlock=malloc(sizeof(TextBlock));
+    textBlock->base=__UIElement_createDefault(ktid_name(TextBlock), TextBlock_draw);
+    textBlock->text=string_copy(text);
+    return textBlock;
 }

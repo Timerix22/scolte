@@ -1,5 +1,6 @@
 #include "../kerep/src/Filesystem/filesystem.h"
 #include "tui.h"
+#include <unistd.h>
 
 Maybe tryReadFile(char* filePath){
     if(!file_exists(filePath))
@@ -31,8 +32,13 @@ i32 main(const i32 argc, const char* const* argv){
     Canvas* mainCanvas=Canvas_create();
     TextBlock* testTextBlock=TextBlock_create(string_fromCptr("some example text"));
     Canvas_addChild(mainCanvas, (UIElement*)testTextBlock);
-    UIElement_draw(mainCanvas, ((Rect){.x=-1, .y=-1, .h=-1, .w=-1}));
+    UIElement_draw(mainCanvas, ((DrawingArea){.x=-1, .y=-1, .h=-1, .w=-1}));
     UIElement_destroy((UIElement*)mainCanvas);
+
+    TerminalSize tsize=terminal_getSize();
+    kprintf("rows: %u culumns: %u\n", tsize.rows, tsize.cols);
+    fflush(stdout);
+    
     kt_free();
     return 0;
 }

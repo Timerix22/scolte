@@ -7,7 +7,7 @@ void Canvas_freeMembers(void* _self){
     Autoarr_freeWithoutMembers(self->children, true);
 }
 
-void Canvas_draw(UIElement* _self, Rect place){
+void Canvas_draw(UIElement* _self, DrawingArea place){
     Canvas* self=(Canvas*)_self;
     Autoarr_foreach(self->children, ch, ({
         UIElement_draw((UIElement*)ch,place);
@@ -18,9 +18,9 @@ void Canvas_draw(UIElement* _self, Rect place){
 kt_define(Canvas, Canvas_freeMembers, NULL);
 
 Canvas* Canvas_create(){
-    Canvas* canvas = malloc(sizeof(Canvas));
-    canvas->base = __UIElement_createDefault(ktid_name(Canvas), Canvas_draw);
-    canvas->children = Autoarr_create(Pointer, 32, 64);
+    Canvas* canvas=malloc(sizeof(Canvas));
+    canvas->base=__UIElement_createDefault(ktid_name(Canvas), Canvas_draw);
+    canvas->children=Autoarr_create(Pointer, 32, 64);
     return canvas;
 }
 

@@ -13,5 +13,5 @@ if [ ! -f "$OBJDIR/libs/kerep.a" ] || [ -f .rebuild_kerep.tmp ]; then
 
     cp kerep/bin/kerep.a $OBJDIR/libs/
     myprint "${GREEN}copied ${CYAN}kerep.a"
-    rm .rebuild_kerep.tmp
+    rm -f .rebuild_kerep.tmp
 fi
