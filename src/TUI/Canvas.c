@@ -1,4 +1,4 @@
-#include "tui.h"
+#include "tui_internal.h"
 
 void Canvas_freeMembers(void* _self){
     Canvas* self=(Canvas*)_self;
@@ -7,12 +7,14 @@ void Canvas_freeMembers(void* _self){
     Autoarr_freeWithoutMembers(self->children, true);
 }
 
-void Canvas_draw(UIElement* _self, DrawingArea place){
+UI_Maybe Canvas_draw(Renderer* renderer, UIElement* _self, DrawingArea area){
     Canvas* self=(Canvas*)_self;
     Autoarr_foreach(self->children, ch, ({
-        UIElement_draw((UIElement*)ch,place);
-        fputc('\n', stdout);
+        if(ch==NULL)
+            UI_safethrow(UIError_NullPtr,;);
+        UI_try(UIElement_draw(renderer, (UIElement*)ch, area),_,;);
     }));
+    return MaybeNull;
 }
 
 kt_define(Canvas, Canvas_freeMembers, NULL);
@@ -25,7 +27,5 @@ Canvas* Canvas_create(){
 }
 
 void Canvas_addChild(Canvas* self, UIElement* child){
-    if (child == NULL)
-        throw(ERR_NULLPTR);
     Autoarr_add(self->children, child);
 }

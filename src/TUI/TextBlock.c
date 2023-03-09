@@ -1,14 +1,16 @@
-#include "tui.h"
-
+#include "tui_internal.h"
 
 void TextBlock_freeMembers(void* _self){
     TextBlock* self=(TextBlock*)_self;
     free(self->text.ptr);
 }
 
-void TextBlock_draw(UIElement* _self, DrawingArea place){
+UI_Maybe TextBlock_draw(Renderer* renderer, UIElement* _self, DrawingArea area){
     TextBlock* self=(TextBlock*)_self;
-    fputs(self->text.ptr, stdout);
+    UI_try(UIElement_validate((UIElement*)self, area),_0,;);
+    UI_try(Renderer_fill(renderer, UTFCHAR(' '), area),_2,;);
+    UI_try(Renderer_drawBorder(renderer, self->base.borders, area),_1,;);
+    return MaybeNull;
 }
 
 kt_define(TextBlock, TextBlock_freeMembers, NULL);

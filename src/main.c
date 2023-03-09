@@ -1,5 +1,5 @@
 #include "../kerep/src/Filesystem/filesystem.h"
-#include "tui.h"
+#include "TUI/tui.h"
 #include <unistd.h>
 
 Maybe tryReadFile(char* filePath){
@@ -14,6 +14,9 @@ Maybe tryReadFile(char* filePath){
 }
 
 i32 main(const i32 argc, const char* const* argv){
+    if(setlocale(LC_CTYPE, "C.UTF-8")!=0)
+        kprintf("\e[93msetlocale failed!\n");
+
     kt_beginInit();
     kt_initKerepTypes();
     kt_initScolteTypes();
@@ -29,15 +32,15 @@ i32 main(const i32 argc, const char* const* argv){
     char* text=(char*)_m_text.value.VoidPtr;
     fputs(text,stdout);*/
 
+    Renderer* renderer=Renderer_create();
     Canvas* mainCanvas=Canvas_create();
     TextBlock* testTextBlock=TextBlock_create(string_fromCptr("some example text"));
     Canvas_addChild(mainCanvas, (UIElement*)testTextBlock);
-    UIElement_draw(mainCanvas, ((DrawingArea){.x=-1, .y=-1, .h=-1, .w=-1}));
-    UIElement_destroy((UIElement*)mainCanvas);
+    tryLast(UIElement_draw(renderer, (UIElement*)mainCanvas, ((DrawingArea){.x=4, .y=4, .h=4, .w=4})),_);
+    tryLast(Renderer_drawFrame(renderer),_2);
 
-    TerminalSize tsize=terminal_getSize();
-    kprintf("rows: %u culumns: %u\n", tsize.rows, tsize.cols);
-    fflush(stdout);
+    UIElement_destroy((UIElement*)mainCanvas);
+    Renderer_destroy(renderer);
     
     kt_free();
     return 0;

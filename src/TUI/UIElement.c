@@ -1,4 +1,4 @@
-#include "tui.h"
+#include "tui_internal.h"
 
 kt_define(UIElement, NULL, NULL);
 
@@ -16,7 +16,7 @@ UIElement __UIElement_createDefault(ktid typeId, UIElement_draw_t drawFunc){
         .anchor=UIAnchor_Center,
         .borders={
             .left=UIBorder_Thin, .right=UIBorder_Thin,
-            .top=UIBorder_Thick, .bottom=UIBorder_Thin
+            .top=UIBorder_Thin, .bottom=UIBorder_Thin
         },
         .draw=drawFunc
     };
@@ -26,4 +26,24 @@ void UIElement_destroy(UIElement* self){
     if(self->type->freeMembers)
         self->type->freeMembers(self);
     free(self);
+}
+
+
+UI_Maybe DrawingArea_validate(DrawingArea a){
+    if(a.h<1) UI_safethrow(UIError_InvalidWidth,;);
+    if(a.w<1) UI_safethrow(UIError_InvalidHeight,;);
+    return MaybeNull;
+}
+
+UI_Maybe UIElement_validate(UIElement* u, DrawingArea a){
+    UI_try(DrawingArea_validate(a),_,;);
+    if(u->max_height<u->min_height)
+        UI_safethrow(UIError_InvalidHeight,;);
+    if(u->max_width<u->min_width)
+        UI_safethrow(UIError_InvalidWidth,;);
+    if(u->min_height>a.h)
+        UI_safethrow(UIError_InvalidHeight,;);
+    if(u->min_width>a.w)
+        UI_safethrow(UIError_InvalidWidth,;);
+    return MaybeNull;
 }
