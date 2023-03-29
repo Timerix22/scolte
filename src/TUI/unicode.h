@@ -16,7 +16,7 @@ static inline size_t utfchar_write(utfchar ch, FILE* file){
     char multibyteUtf8[8]={0};
     mbstate_t mbs={0};
     size_t length=c16rtomb(multibyteUtf8, ch, &mbs);
-    if(length!=-1)
+    if(length!=(size_t)-1)
         for(u8 i=0; i<length; i++){
             int rez=fputc(multibyteUtf8[i], file);
             if(rez<0)

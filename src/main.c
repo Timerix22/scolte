@@ -6,7 +6,7 @@ Maybe tryReadFile(char* filePath){
     if(!file_exists(filePath))
         kprintf("file doesnt exist, creating new\n");
     try(file_open(filePath, FileOpenMode_ReadAppend), _m_file,;);
-    File* file=_m_file.value.VoidPtr;
+    FileHandle file=_m_file.value.VoidPtr;
     char* fileContent=NULL;
     try(file_readAll(file, &fileContent), _m_bcount,;)
     try(file_close(file),_m_,;);
