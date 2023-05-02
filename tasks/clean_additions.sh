@@ -1,4 +1,4 @@
 #!/usr/bin/bash
-
-myprint "${WHITE}deleting .kerep_rebuild.tmp"
-rm -rf .kerep_rebuild.tmp
+for tmpfile in $(ls .rebuild_*.tmp); do
+    try_delete_dir_or_file "$tmpfile"
+done
