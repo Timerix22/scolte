@@ -12,10 +12,16 @@ Maybe tryReadFile(char* filePath){
     try(file_close(file),_m_,;);
     return SUCCESS(UniHeapPtr(char,fileContent));
 }
-
+#include <windows.h>
 i32 main(const i32 argc, const char* const* argv){
-    if(setlocale(LC_CTYPE, "C.UTF-8")!=0)
-        kprintf("\e[93msetlocale failed!\n");
+#if _WIN32 || _WIN64
+    if(!SetConsoleOutputCP(CP_UTF8)){
+        kprintf("\e[93mcan't set console codepage to utf8");
+    }
+#endif
+    if(setlocale(LC_ALL, "C.UTF8")==0){ // doesn't work on windows
+        kprintf("\e[93msetlocale failed! (%i)\n", errno);
+    }
 
     kt_beginInit();
     kt_initKerepTypes();

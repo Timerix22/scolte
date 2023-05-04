@@ -21,10 +21,11 @@ Maybe FrameBuffer_create(FrameBuffer* fb){
                     term_default_size.cols, term_default_size.rows);
     }
     u32 length=fb->size.cols * fb->size.rows;
-    fb->data=malloc(sizeof(*fb->data) * length);
+    u32 sz=sizeof(*fb->data);
+    fb->data=malloc( sz* length);
     
     for(u32 i=0; i<length; i++)
-        fb->data[i]=UTFCHAR('#');
+        fb->data[i]=TERMCHAR('#');
 
     return MaybeNull;
 }
@@ -38,7 +39,7 @@ void Renderer_freeMembers(void * _self){
 //             Renderer             //
 //////////////////////////////////////
 
-UI_Maybe __Renderer_set(Renderer* self, utfchar c, u16 x, u16 y) {
+UI_Maybe __Renderer_set(Renderer* self, termchar c, u16 x, u16 y) {
     if(x >= self->frameBuffer.size.cols)
         UI_safethrow(UIError_InvalidX,;);
     if(y >= self->frameBuffer.size.rows)
@@ -57,8 +58,8 @@ UI_Maybe __Renderer_drawFrame(Renderer* self){
 
     for(u16 y=0; y<buf.size.rows; y++){
         for(u16 x=0; x<buf.size.cols; x++){
-            utfchar c=buf.data[buf.size.cols*y + x];
-            int rez=utfchar_print(c);
+            termchar c=buf.data[buf.size.cols*y + x];
+            int rez=termchar_print(c);
             if(rez<0){
                 char* chex=toString_hex(&c, sizeof(c), true, true, true);
                 char* errnostr=toString_i64(errno);
@@ -95,7 +96,7 @@ Renderer* Renderer_create(){
 //        drawing functions         //
 //////////////////////////////////////
 
-UI_Maybe Renderer_fill(Renderer* renderer, utfchar c, DrawingArea area){
+UI_Maybe Renderer_fill(Renderer* renderer, termchar c, DrawingArea area){
     UI_try(DrawingArea_validate(area),_,;);
     for(u16 y=area.y; y<area.y+area.h; y++)
         for(u16 x=area.x; x<area.x+area.w; x++){
@@ -104,7 +105,7 @@ UI_Maybe Renderer_fill(Renderer* renderer, utfchar c, DrawingArea area){
     return MaybeNull;
 }
 
-UI_Maybe Renderer_drawLineX(Renderer* renderer, utfchar c, u16 x, u16 y, u16 length){
+UI_Maybe Renderer_drawLineX(Renderer* renderer, termchar c, u16 x, u16 y, u16 length){
     while(length>0){
         UI_try(Renderer_set(renderer, c, x, y),_,;);
         x++; length--;
@@ -112,7 +113,7 @@ UI_Maybe Renderer_drawLineX(Renderer* renderer, utfchar c, u16 x, u16 y, u16 len
     return MaybeNull;
 }
 
-UI_Maybe Renderer_drawLineY(Renderer* renderer, utfchar c, u16 x, u16 y, u16 length){
+UI_Maybe Renderer_drawLineY(Renderer* renderer, termchar c, u16 x, u16 y, u16 length){
     while(length>0){
         UI_try(Renderer_set(renderer, c, x, y),_,;);
         y++; length--;
@@ -124,10 +125,10 @@ UI_Maybe Renderer_drawBorder(Renderer* renderer, UIBorder border, DrawingArea ar
     UI_try(DrawingArea_validate(area),_0,;);
 
     //lines
-    utfchar topChar    = UIBorder_char_h[border.top   ];
-    utfchar bottomChar = UIBorder_char_h[border.bottom];
-    utfchar leftChar   = UIBorder_char_v[border.left  ];
-    utfchar rightChar  = UIBorder_char_v[border.right ];
+    termchar topChar    = UIBorder_char_h[border.top   ];
+    termchar bottomChar = UIBorder_char_h[border.bottom];
+    termchar leftChar   = UIBorder_char_v[border.left  ];
+    termchar rightChar  = UIBorder_char_v[border.right ];
     // top
     
     // TODO check neighbor borders and insert crossing     chars like '╄'
@@ -141,10 +142,10 @@ UI_Maybe Renderer_drawBorder(Renderer* renderer, UIBorder border, DrawingArea ar
     UI_try(Renderer_drawLineY(renderer, rightChar, area.x+area.w-1, area.y+1, area.h-2),_4,;)
 
     // corners
-    utfchar ltCornerChar = UIBorder_char_lt[border.left ][border.top   ];
-    utfchar rtCornerChar = UIBorder_char_rt[border.right][border.top   ];
-    utfchar rbCornerChar = UIBorder_char_rb[border.right][border.bottom];
-    utfchar lbCornerChar = UIBorder_char_lb[border.left ][border.bottom];
+    termchar ltCornerChar = UIBorder_char_lt[border.left ][border.top   ];
+    termchar rtCornerChar = UIBorder_char_rt[border.right][border.top   ];
+    termchar rbCornerChar = UIBorder_char_rb[border.right][border.bottom];
+    termchar lbCornerChar = UIBorder_char_lb[border.left ][border.bottom];
     // left top corner
     UI_try(Renderer_set(renderer, ltCornerChar, area.x, area.y),_5,;);
     // right top corner

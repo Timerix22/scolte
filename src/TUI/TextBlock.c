@@ -8,7 +8,7 @@ void TextBlock_freeMembers(void* _self){
 UI_Maybe TextBlock_draw(Renderer* renderer, UIElement* _self, DrawingArea area){
     TextBlock* self=(TextBlock*)_self;
     UI_try(UIElement_validate((UIElement*)self, area),_0,;);
-    UI_try(Renderer_fill(renderer, UTFCHAR(' '), area),_2,;);
+    UI_try(Renderer_fill(renderer, TERMCHAR(' '), area),_2,;);
     UI_try(Renderer_drawBorder(renderer, self->base.borders, area),_1,;);
     return MaybeNull;
 }

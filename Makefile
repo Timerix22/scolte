@@ -12,6 +12,15 @@ build_exec: profile
 build_exec_dbg:
 	@cbuild/call_task.sh build_exec_dbg 2>&1 | tee make_raw.log
 
+# recompile kerep.a in the next build task
+rebuild_kerep: 
+	@tasks/rebuild_lib.sh kerep
+# recompile utf8proc.a in the next build task
+rebuild_utf8proc: 
+	@tasks/rebuild_lib.sh utf8proc
+
+rebuild_all: rebuild_kerep rebuild_utf8proc
+
 ######################################
 ######       Launch tasks      #######
 ######################################
@@ -59,7 +68,3 @@ fix_log:
 		| sed 's/  H  //g' \
 		| sed 's/\[3gH  //g' \
 		> make_fixed.log
-
-# recompile kerep.a in the next build task
-rebuild_kerep: 
-	@cbuild/call_task.sh rebuild_kerep

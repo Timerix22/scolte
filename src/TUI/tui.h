@@ -8,7 +8,7 @@ extern "C" {
 #include "../../kerep/src/kprint/kprint_colors.h"
 #include "../../kerep/src/Array/Array.h"
 #include "../term/term.h"
-#include "unicode.h"
+#include "../encoding/encoding.h"
 #include "UIError.h"
 
 
@@ -62,7 +62,7 @@ STRUCT(UIBorder,
 //////////////////////////////////////
 
 STRUCT(FrameBuffer,
-    utfchar* data;
+    termchar* data;
     TerminalSize size;
 )
 
@@ -71,7 +71,7 @@ typedef struct Renderer Renderer;
 STRUCT(Renderer,
     FrameBuffer frameBuffer;
     UI_THROWING_FUNC_DECL((*drawFrame)(Renderer*));
-    UI_THROWING_FUNC_DECL((*set)(Renderer*, utfchar c, u16 x, u16 y));
+    UI_THROWING_FUNC_DECL((*set)(Renderer*, termchar c, u16 x, u16 y));
 )
 
 #define Renderer_drawFrame(RENDERER) RENDERER->drawFrame(RENDERER)
@@ -80,9 +80,9 @@ STRUCT(Renderer,
 Renderer* Renderer_create();
 void Renderer_destroy(Renderer* self);
 
-UI_THROWING_FUNC_DECL(Renderer_fill(Renderer* renderer, utfchar c, DrawingArea area));
-UI_THROWING_FUNC_DECL(Renderer_drawLineX(Renderer* renderer, utfchar c, u16 x, u16 y, u16 length));
-UI_THROWING_FUNC_DECL(Renderer_drawLineY(Renderer* renderer, utfchar c, u16 x, u16 y, u16 length));
+UI_THROWING_FUNC_DECL(Renderer_fill(Renderer* renderer, termchar c, DrawingArea area));
+UI_THROWING_FUNC_DECL(Renderer_drawLineX(Renderer* renderer, termchar c, u16 x, u16 y, u16 length));
+UI_THROWING_FUNC_DECL(Renderer_drawLineY(Renderer* renderer, termchar c, u16 x, u16 y, u16 length));
 UI_THROWING_FUNC_DECL(Renderer_drawBorder(Renderer* renderer, UIBorder border, DrawingArea area));
 
 //////////////////////////////////////
