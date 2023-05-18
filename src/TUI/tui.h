@@ -5,7 +5,7 @@ extern "C" {
 #endif
 
 #include "../../kerep/src/String/string.h"
-#include "../../kerep/src/kprint/kprint_colors.h"
+#include "../../kerep/src/kprint/kprint_format.h"
 #include "../../kerep/src/Array/Array.h"
 #include "../term/term.h"
 #include "../encoding/encoding.h"
@@ -55,14 +55,24 @@ STRUCT(UIBorder,
     UIBorderThickness left;
     UIBorderThickness top;
     UIBorderThickness bottom;
+    kp_fmt color;
 )
+
+STRUCT(TermCharInfo,
+    termchar ch;
+    kp_fmt color; /* background + foreground */
+)
+
+#define TCI(CH,COLOR)(TermCharInfo){.ch=CH, .color=COLOR}
+int TCI_fwrite(FILE* file, TermCharInfo tci);
+#define TCI_print(tci) TCI_fwrite(stdout, tci);
 
 //////////////////////////////////////
 //             Renderer             //
 //////////////////////////////////////
 
 STRUCT(FrameBuffer,
-    termchar* data;
+    TermCharInfo* data;
     TerminalSize size;
 )
 
@@ -71,19 +81,19 @@ typedef struct Renderer Renderer;
 STRUCT(Renderer,
     FrameBuffer frameBuffer;
     UI_THROWING_FUNC_DECL((*drawFrame)(Renderer*));
-    UI_THROWING_FUNC_DECL((*set)(Renderer*, termchar c, u16 x, u16 y));
+    UI_THROWING_FUNC_DECL((*set)(Renderer*, TermCharInfo tci, u16 x, u16 y));
 )
 
 #define Renderer_drawFrame(RENDERER) RENDERER->drawFrame(RENDERER)
-#define Renderer_set(RENDERER, CH, X, Y) RENDERER->set(RENDERER, CH, X, Y)
+#define Renderer_set(RENDERER, TCI, X, Y) RENDERER->set(RENDERER, TCI, X, Y)
 
 Renderer* Renderer_create();
 void Renderer_destroy(Renderer* self);
 
-UI_THROWING_FUNC_DECL(Renderer_fill(Renderer* renderer, termchar c, DrawingArea area));
-UI_THROWING_FUNC_DECL(Renderer_drawLineX(Renderer* renderer, termchar c, u16 x, u16 y, u16 length));
-UI_THROWING_FUNC_DECL(Renderer_drawLineY(Renderer* renderer, termchar c, u16 x, u16 y, u16 length));
-UI_THROWING_FUNC_DECL(Renderer_drawBorder(Renderer* renderer, UIBorder border, DrawingArea area));
+UI_THROWING_FUNC_DECL(Renderer_fill(Renderer* renderer, TermCharInfo tci, const DrawingArea area));
+UI_THROWING_FUNC_DECL(Renderer_drawLineX(Renderer* renderer, TermCharInfo tci, u16 x, u16 y, u16 length));
+UI_THROWING_FUNC_DECL(Renderer_drawLineY(Renderer* renderer, TermCharInfo tci, u16 x, u16 y, u16 length));
+UI_THROWING_FUNC_DECL(Renderer_drawBorder(Renderer* renderer, UIBorder border, const DrawingArea area));
 
 //////////////////////////////////////
 //    UIElement abstract struct     //
@@ -91,7 +101,7 @@ UI_THROWING_FUNC_DECL(Renderer_drawBorder(Renderer* renderer, UIBorder border, D
 
 typedef struct UIElement UIElement;
 typedef UIElement* UIElementPtr;
-typedef UI_THROWING_FUNC_DECL((*UIElement_draw_t)(Renderer* renderer, UIElement* self, DrawingArea area));
+typedef UI_THROWING_FUNC_DECL((*UIElement_draw_t)(Renderer* renderer, UIElement* self, const DrawingArea area));
 
 #define UIElement_stretch (u16)-1
 
@@ -104,7 +114,7 @@ STRUCT(UIElement,
     kp_fgColor fgColor;
     kp_bgColor bgColor;
     UIAnchor anchor;
-    UIBorder borders;
+    UIBorder border;
     UIElement_draw_t draw;
 )
 

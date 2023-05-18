@@ -1,6 +1,10 @@
 #include "../kerep/src/Filesystem/filesystem.h"
 #include "TUI/tui.h"
 #include <unistd.h>
+#include <errno.h>
+#if _WIN32 || _WIN64
+#include <windows.h>
+#endif
 
 Maybe tryReadFile(char* filePath){
     if(!file_exists(filePath))
@@ -12,7 +16,7 @@ Maybe tryReadFile(char* filePath){
     try(file_close(file),_m_,;);
     return SUCCESS(UniHeapPtr(char,fileContent));
 }
-#include <windows.h>
+
 i32 main(const i32 argc, const char* const* argv){
 #if _WIN32 || _WIN64
     if(!SetConsoleOutputCP(CP_UTF8)){
@@ -42,7 +46,7 @@ i32 main(const i32 argc, const char* const* argv){
     Canvas* mainCanvas=Canvas_create();
     TextBlock* testTextBlock=TextBlock_create(string_fromCptr("some example text"));
     Canvas_addChild(mainCanvas, (UIElement*)testTextBlock);
-    tryLast(UIElement_draw(renderer, (UIElement*)mainCanvas, ((DrawingArea){.x=4, .y=4, .h=4, .w=4})),_);
+    tryLast(UIElement_draw(renderer, (UIElement*)mainCanvas, ((DrawingArea){.x=10, .y=4, .h=7, .w=24})),_);
     tryLast(Renderer_drawFrame(renderer),_2);
 
     UIElement_destroy((UIElement*)mainCanvas);

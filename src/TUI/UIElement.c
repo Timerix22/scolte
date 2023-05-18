@@ -14,9 +14,10 @@ UIElement __UIElement_createDefault(ktid typeId, UIElement_draw_t drawFunc){
         .fgColor=kp_fgWhite,
         .bgColor=kp_bgBlack,
         .anchor=UIAnchor_Center,
-        .borders={
+        .border={
             .left=UIBorder_Thin, .right=UIBorder_Thin,
-            .top=UIBorder_Thin, .bottom=UIBorder_Thin
+            .top=UIBorder_Thin, .bottom=UIBorder_Thin,
+            .color=kp_bgBlack|kp_fgGray
         },
         .draw=drawFunc
     };

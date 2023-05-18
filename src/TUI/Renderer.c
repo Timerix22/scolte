@@ -1,5 +1,10 @@
 #include "tui_internal.h"
 
+int TCI_fwrite(FILE* file, TermCharInfo tci){
+    kprint_setColor(tci.color);
+    return termchar_fwrite(file, tci.ch);
+}
+
 //////////////////////////////////////
 //            FrameBuffer           //
 //////////////////////////////////////
@@ -25,7 +30,7 @@ Maybe FrameBuffer_create(FrameBuffer* fb){
     fb->data=malloc( sz* length);
     
     for(u32 i=0; i<length; i++)
-        fb->data[i]=TERMCHAR('#');
+        fb->data[i]=TCI(TERMCHAR(' '), kp_bgGray|kp_fgGray);
 
     return MaybeNull;
 }
@@ -39,12 +44,12 @@ void Renderer_freeMembers(void * _self){
 //             Renderer             //
 //////////////////////////////////////
 
-UI_Maybe __Renderer_set(Renderer* self, termchar c, u16 x, u16 y) {
+UI_Maybe __Renderer_set(Renderer* self, TermCharInfo tci, u16 x, u16 y) {
     if(x >= self->frameBuffer.size.cols)
         UI_safethrow(UIError_InvalidX,;);
     if(y >= self->frameBuffer.size.rows)
         UI_safethrow(UIError_InvalidY,;);
-    self->frameBuffer.data[self->frameBuffer.size.cols * y + x] = c;
+    self->frameBuffer.data[self->frameBuffer.size.cols * y + x] = tci;
     return MaybeNull;
 }
 
@@ -58,10 +63,10 @@ UI_Maybe __Renderer_drawFrame(Renderer* self){
 
     for(u16 y=0; y<buf.size.rows; y++){
         for(u16 x=0; x<buf.size.cols; x++){
-            termchar c=buf.data[buf.size.cols*y + x];
-            int rez=termchar_print(c);
+            TermCharInfo tci=buf.data[buf.size.cols*y + x];
+            int rez=TCI_print(tci);
             if(rez<0){
-                char* chex=toString_hex(&c, sizeof(c), true, true, true);
+                char* chex=toString_hex(&tci.ch, sizeof(tci.ch), true, true, true);
                 char* errnostr=toString_i64(errno);
                 char* errmsg=cptr_concat(nameof(UIError_PrintError)," (errno: ",errnostr,"): can't print char ",chex);
                 free(errnostr);
@@ -96,32 +101,32 @@ Renderer* Renderer_create(){
 //        drawing functions         //
 //////////////////////////////////////
 
-UI_Maybe Renderer_fill(Renderer* renderer, termchar c, DrawingArea area){
+UI_Maybe Renderer_fill(Renderer* renderer, TermCharInfo tci, const DrawingArea area){
     UI_try(DrawingArea_validate(area),_,;);
     for(u16 y=area.y; y<area.y+area.h; y++)
         for(u16 x=area.x; x<area.x+area.w; x++){
-            UI_try(Renderer_set(renderer, c, x, y),_,;);
+            UI_try(Renderer_set(renderer, tci, x, y),_,;);
         }
     return MaybeNull;
 }
 
-UI_Maybe Renderer_drawLineX(Renderer* renderer, termchar c, u16 x, u16 y, u16 length){
+UI_Maybe Renderer_drawLineX(Renderer* renderer, TermCharInfo tci, u16 x, u16 y, u16 length){
     while(length>0){
-        UI_try(Renderer_set(renderer, c, x, y),_,;);
+        UI_try(Renderer_set(renderer, tci, x, y),_,;);
         x++; length--;
     }
     return MaybeNull;
 }
 
-UI_Maybe Renderer_drawLineY(Renderer* renderer, termchar c, u16 x, u16 y, u16 length){
+UI_Maybe Renderer_drawLineY(Renderer* renderer, TermCharInfo tci, u16 x, u16 y, u16 length){
     while(length>0){
-        UI_try(Renderer_set(renderer, c, x, y),_,;);
+        UI_try(Renderer_set(renderer, tci, x, y),_,;);
         y++; length--;
     }
     return MaybeNull;
 }
 
-UI_Maybe Renderer_drawBorder(Renderer* renderer, UIBorder border, DrawingArea area){
+UI_Maybe Renderer_drawBorder(Renderer* renderer, UIBorder border, const DrawingArea area){
     UI_try(DrawingArea_validate(area),_0,;);
 
     //lines
@@ -133,13 +138,13 @@ UI_Maybe Renderer_drawBorder(Renderer* renderer, UIBorder border, DrawingArea ar
     
     // TODO check neighbor borders and insert crossing     chars like '╄'
 
-    UI_try(Renderer_drawLineX(renderer, topChar, area.x+1, area.y, area.w-2),_1,;)
+    UI_try(Renderer_drawLineX(renderer, TCI(topChar, border.color), area.x+1, area.y, area.w-2),_1,;)
     // bottom
-    UI_try(Renderer_drawLineX(renderer, bottomChar, area.x+1, area.y+area.h-1, area.w-2),_2,;)
+    UI_try(Renderer_drawLineX(renderer, TCI(bottomChar, border.color), area.x+1, area.y+area.h-1, area.w-2),_2,;)
     // left
-    UI_try(Renderer_drawLineY(renderer, leftChar, area.x, area.y+1, area.h-2),_3,;)
+    UI_try(Renderer_drawLineY(renderer, TCI(leftChar, border.color), area.x, area.y+1, area.h-2),_3,;)
     // right
-    UI_try(Renderer_drawLineY(renderer, rightChar, area.x+area.w-1, area.y+1, area.h-2),_4,;)
+    UI_try(Renderer_drawLineY(renderer, TCI(rightChar, border.color), area.x+area.w-1, area.y+1, area.h-2),_4,;)
 
     // corners
     termchar ltCornerChar = UIBorder_char_lt[border.left ][border.top   ];
@@ -147,13 +152,13 @@ UI_Maybe Renderer_drawBorder(Renderer* renderer, UIBorder border, DrawingArea ar
     termchar rbCornerChar = UIBorder_char_rb[border.right][border.bottom];
     termchar lbCornerChar = UIBorder_char_lb[border.left ][border.bottom];
     // left top corner
-    UI_try(Renderer_set(renderer, ltCornerChar, area.x, area.y),_5,;);
+    UI_try(Renderer_set(renderer, TCI(ltCornerChar, border.color), area.x, area.y),_5,;);
     // right top corner
-    UI_try(Renderer_set(renderer, rtCornerChar, area.x+area.w-1, area.y),_6,;);
+    UI_try(Renderer_set(renderer, TCI(rtCornerChar, border.color), area.x+area.w-1, area.y),_6,;);
     // right bottom corner
-    UI_try(Renderer_set(renderer, rbCornerChar, area.x+area.w-1, area.y+area.h-1),_7,;);
+    UI_try(Renderer_set(renderer, TCI(rbCornerChar, border.color), area.x+area.w-1, area.y+area.h-1),_7,;);
     // left bottom corner
-    UI_try(Renderer_set(renderer, lbCornerChar, area.x, area.y+area.h-1),_8,;);
+    UI_try(Renderer_set(renderer, TCI(lbCornerChar, border.color), area.x, area.y+area.h-1),_8,;);
 
     return MaybeNull;
 }

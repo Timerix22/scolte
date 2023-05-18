@@ -18,7 +18,7 @@ int utf32char_fwrite(FILE* file, utf32char ch);
 typedef utf32char termchar;
 #define TERMCHAR(CHAR) U##CHAR
 #define TERMSTR(STR) U##STR
-#define termchar_print(CH) utf32char_fwrite(stdout, CH)
+#define termchar_fwrite utf32char_fwrite
 
 #if __cplusplus
 }

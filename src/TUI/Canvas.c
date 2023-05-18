@@ -7,7 +7,7 @@ void Canvas_freeMembers(void* _self){
     Autoarr_freeWithoutMembers(self->children, true);
 }
 
-UI_Maybe Canvas_draw(Renderer* renderer, UIElement* _self, DrawingArea area){
+UI_Maybe Canvas_draw(Renderer* renderer, UIElement* _self, const DrawingArea area){
     Canvas* self=(Canvas*)_self;
     Autoarr_foreach(self->children, ch, ({
         if(ch==NULL)
