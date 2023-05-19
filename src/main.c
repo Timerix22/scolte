@@ -1,5 +1,5 @@
-#include "../kerep/src/Filesystem/filesystem.h"
 #include "TUI/tui.h"
+#include "../kerep/src/Filesystem/filesystem.h"
 #include <unistd.h>
 #include <errno.h>
 #if _WIN32 || _WIN64
@@ -37,19 +37,20 @@ i32 main(const i32 argc, const char* const* argv){
         kprintf(" %s", argv[i]);
     kprintf("\n");
     
-    /*char* filePath= argc>1 ? argv[argc-1] : "new_file.txt";
+    /* char* filePath= argc>1 ? argv[argc-1] : "new_file.txt";
     tryLast(tryReadFile(filePath), _m_text);
     char* text=(char*)_m_text.value.VoidPtr;
-    fputs(text,stdout);*/
+    fputs(text,stdout); */
 
     Renderer* renderer=Renderer_create();
-    Canvas* mainCanvas=Canvas_create();
     TextBlock* testTextBlock=TextBlock_create(string_fromCptr("some example text"));
-    Canvas_addChild(mainCanvas, (UIElement*)testTextBlock);
-    tryLast(UIElement_draw(renderer, (UIElement*)mainCanvas, ((DrawingArea){.x=10, .y=4, .h=7, .w=24})),_);
+    Autoarr(UIElement_Ptr)* grid_content=Autoarr_create(UIElement_Ptr, 1, 64);
+    Autoarr_add(grid_content, (UIElement_Ptr)testTextBlock);
+    Grid* mainGrid=Grid_create(1,1, Autoarr_toArray(grid_content));
+    tryLast(UIElement_draw(renderer, (UIElement_Ptr)mainGrid, ((DrawingArea){.x=10, .y=4, .h=7, .w=24})),_);
     tryLast(Renderer_drawFrame(renderer),_2);
 
-    UIElement_destroy((UIElement*)mainCanvas);
+    UIElement_destroy((UIElement_Ptr)mainGrid);
     Renderer_destroy(renderer);
     
     kt_free();

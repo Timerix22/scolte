@@ -7,6 +7,6 @@ void kt_initScolteTypes(){
     kt_register(DrawingArea);
     kt_register(UIBorder);
     kt_register(UIElement);
-    kt_register(Canvas);
+    kt_register(Grid);
     kt_register(TextBlock);
 }

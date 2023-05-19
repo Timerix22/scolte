@@ -20,18 +20,6 @@ void kt_initScolteTypes();
 //              Enums               //
 //////////////////////////////////////
 
-PACKED_ENUM(UIAnchor,
-    UIAnchor_Center=0,
-    UIAnchor_Left=1,
-    UIAnchor_Right=2,
-    UIAnchor_Top=4,
-    UIAnchor_Bottom=8,
-    UIAnchor_RightTop=UIAnchor_Right|UIAnchor_Top,
-    UIAnchor_RightBottom=UIAnchor_Right|UIAnchor_Bottom,
-    UIAnchor_LeftTop=UIAnchor_Left|UIAnchor_Top,
-    UIAnchor_LeftBottom=UIAnchor_Left|UIAnchor_Bottom
-)
-
 PACKED_ENUM(UIBorderThickness,
     UIBorder_Hidden, /* blank space */
     UIBorder_Thin,
@@ -100,43 +88,46 @@ UI_THROWING_FUNC_DECL(Renderer_drawBorder(Renderer* renderer, UIBorder border, c
 //////////////////////////////////////
 
 typedef struct UIElement UIElement;
-typedef UIElement* UIElementPtr;
-typedef UI_THROWING_FUNC_DECL((*UIElement_draw_t)(Renderer* renderer, UIElement* self, const DrawingArea area));
+typedef UIElement* UIElement_Ptr;
+typedef UI_THROWING_FUNC_DECL((*UIElement_draw_t)(Renderer* renderer, UIElement_Ptr self, const DrawingArea area));
 
-#define UIElement_stretch (u16)-1
+#define UIElement_no_scaling (u16)0
 
 STRUCT(UIElement,
     ktDescriptor* type;
     u16 min_width;
-    u16 max_width;
     u16 min_height;
-    u16 max_height;
-    kp_fgColor fgColor;
-    kp_bgColor bgColor;
-    UIAnchor anchor;
+    u16 width_scaling; 
+    u16 height_scaling; 
+    kp_fmt color;
     UIBorder border;
     UIElement_draw_t draw;
 )
 
 /// proper way to free UIElement and all its members 
-void UIElement_destroy(UIElement* self);
+void UIElement_destroy(UIElement_Ptr self);
 #define UIElement_draw(RENDERER, UIE_PTR, PLACE_RECT) \
-    ((UIElement*)UIE_PTR)->draw(RENDERER, UIE_PTR, PLACE_RECT)
+    ((UIElement_Ptr)UIE_PTR)->draw(RENDERER, UIE_PTR, PLACE_RECT)
+
+Autoarr_declare(UIElement_Ptr)
+Array_declare(UIElement)
 
 //////////////////////////////////////
 //      UIElement derivatives       //
 //////////////////////////////////////
 
-//////          Canvas          //////
+//////           Grid           //////
 
-STRUCT(Canvas,
+STRUCT(Grid,
     UIElement base;
-    /* Autoarr(UIElementPtr) */
-    Autoarr(Pointer)* children;
+    u16 columns;
+    u16 rows;
+    UIElement_Ptr* ui_elements; /* UIElement[rows][columns] */
 )
 
-Canvas* Canvas_create();
-void Canvas_addChild(Canvas* self, UIElement* child);
+Grid* Grid_create(u16 columns, u16 rows, UIElement_Ptr* ui_elements);
+UIElement_Ptr Grid_get(Grid* grid, u16 column, u16 row);
+void Grid_set(Grid* grid, u16 column, u16 row, UIElement_Ptr value);
 
 
 //////         TextBlock        //////

@@ -5,9 +5,9 @@ void TextBlock_freeMembers(void* _self){
     free(self->text.ptr);
 }
 
-UI_Maybe TextBlock_draw(Renderer* renderer, UIElement* _self, const DrawingArea area){
+UI_Maybe TextBlock_draw(Renderer* renderer, UIElement_Ptr _self, const DrawingArea area){
     TextBlock* self=(TextBlock*)_self;
-    UI_try(UIElement_validate((UIElement*)self, area),_0,;);
+    UI_try(UIElement_validate((UIElement_Ptr)self, area),_0,;);
     UI_try(Renderer_fill(renderer, TCI(TERMCHAR(' '), kp_bgBlack|kp_fgGray), area),_2,;);
     UI_try(Renderer_drawBorder(renderer, self->base.border, area),_1,;);
     for(u16 i=0; i<area.w-2 && i<self->text.length; i++){
