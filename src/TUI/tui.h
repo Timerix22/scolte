@@ -5,7 +5,6 @@ extern "C" {
 #endif
 
 #include "../../kerep/src/String/string.h"
-#include "../../kerep/src/kprint/kprint_format.h"
 #include "../../kerep/src/Array/Array.h"
 #include "../term/term.h"
 #include "../encoding/encoding.h"
@@ -43,17 +42,9 @@ STRUCT(UIBorder,
     UIBorderThickness left;
     UIBorderThickness top;
     UIBorderThickness bottom;
-    kp_fmt color;
+    termcolor color;
 )
 
-STRUCT(TermCharInfo,
-    termchar ch;
-    kp_fmt color; /* background + foreground */
-)
-
-#define TCI(CH,COLOR)(TermCharInfo){.ch=CH, .color=COLOR}
-int TCI_fwrite(FILE* file, TermCharInfo tci);
-#define TCI_print(tci) TCI_fwrite(stdout, tci);
 
 //////////////////////////////////////
 //             Renderer             //
@@ -99,7 +90,7 @@ STRUCT(UIElement,
     u16 min_height;
     u16 width_scaling; 
     u16 height_scaling; 
-    kp_fmt color;
+    termcolor color;
     UIBorder border;
     UIElement_draw_t draw;
 )

@@ -1,10 +1,5 @@
 #include "tui_internal.h"
 
-int TCI_fwrite(FILE* file, TermCharInfo tci){
-    kprint_setColor(tci.color);
-    return termchar_fwrite(file, tci.ch);
-}
-
 //////////////////////////////////////
 //            FrameBuffer           //
 //////////////////////////////////////

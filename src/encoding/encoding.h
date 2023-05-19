@@ -15,11 +15,6 @@ typedef u32 utf32char;
 ///@returns <0 error code of fputc
 int utf32char_fwrite(FILE* file, utf32char ch);
 
-typedef utf32char termchar;
-#define TERMCHAR(CHAR) U##CHAR
-#define TERMSTR(STR) U##STR
-#define termchar_fwrite utf32char_fwrite
-
 #if __cplusplus
 }
 #endif

@@ -3,14 +3,17 @@
 #include <unistd.h>
 #include IFWIN("windows.h", "sys/ioctl.h")
 
-void term_moveCursor(u16 row, u16 column){
-    printf("\e[%u;%uf",row,column);
-    
+char* TerminalSize_toString(TerminalSize t){
+    char buf[64];
+    sprintf_s(buf, sizeof(buf), "(%ux%u)", t.cols, t.rows);
+    return cptr_copy(buf);
 }
 
-void term_clear() {
-    printf("\e[2j");
-}
+char* __TerminalSize_toString(void* _t, u32 fmt){ return TerminalSize_toString(*(TerminalSize*)_t); }
+
+kt_define(TerminalSize, NULL, __TerminalSize_toString);
+
+TerminalSize term_default_size={.cols=80, .rows=16};
 
 bool term_getSize(TerminalSize* out) {
 #if defined(_WIN64) || defined(_WIN32)
@@ -35,4 +38,11 @@ bool term_getSize(TerminalSize* out) {
     return true;
 }
 
-TerminalSize term_default_size={.cols=80, .rows=16};
+
+void term_moveCursor(u16 row, u16 column){
+    printf("\e[%u;%uf",row,column);    
+}
+
+void term_clear() {
+    printf("\e[2j");
+}
