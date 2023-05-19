@@ -1,9 +1,11 @@
 [submodule "cbuild"]
 	path = cbuild
 	url = https://github.com/Timerix22/cbuild.git
+    branch = main
 [submodule "kerep"]
 	path = kerep
 	url = https://github.com/Timerix22/kerep.git
+    branch = main
 [submodule "utf8proc"]
 	path = utf8proc
 	url = https://github.com/Timerix22/utf8proc.git
