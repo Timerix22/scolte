@@ -8,8 +8,11 @@ extern "C" {
 #include "../../kerep/src/kprint/kprint_format.h"
 #include "../encoding/encoding.h"
 
-void term_moveCursor(u16 row, u16 column);
+void term_resetCursor();
+void term_resetColors();
 void term_clear();
+void term_cursorMove(u16 row, u16 column);
+void term_cursorHide(bool hide);
 
 STRUCT(TerminalSize,
     u16 cols;

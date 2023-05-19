@@ -15,6 +15,13 @@ kt_define(TerminalSize, NULL, __TerminalSize_toString);
 
 TerminalSize term_default_size={.cols=80, .rows=16};
 
+int getenv_int(const char* var_name){
+    char* str=getenv(var_name);
+    if(str==NULL)
+        return -1;
+    return strtol(str, NULL, 0);
+}
+
 bool term_getSize(TerminalSize* out) {
 #if defined(_WIN64) || defined(_WIN32)
     // helps when STD_OUT is redirected to a file
@@ -27,22 +34,30 @@ bool term_getSize(TerminalSize* out) {
         .rows=consoleInfo.srWindow.Bottom-consoleInfo.srWindow.Top+1
     };
 #else
-    struct winsize w={0,0,0,0};
-    if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &w)!=0)
-        return false;
-    *out=(TerminalSize){
-        .cols=w.ws_col,
-        .rows=w.ws_row
-    };
+    struct winsize ws={0,0,0,0};
+    // tries to get terminal size from stdin, stdout, stderr
+    if (ioctl(STDIN_FILENO,  TIOCGWINSZ, &ws)==0 ||
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws)==0 ||
+        ioctl(STDERR_FILENO, TIOCGWINSZ, &ws)==0 ){
+        out->cols=ws.ws_col;
+        out->rows=ws.ws_row;
+    }
+    // tries to get size from environtent variables
+    else{
+        out->cols=getenv_int("COLUMNS");
+        out->rows=getenv_int("LINES");
+    }
 #endif
-    return true;
+    return out->cols > 0 && out->cols < 720 && out->rows > 0 && out->rows < 480;
 }
 
+/*
+Most of escape sequences can be found at: 
+https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
+*/
 
-void term_moveCursor(u16 row, u16 column){
-    printf("\e[%u;%uf",row,column);    
-}
-
-void term_clear() {
-    printf("\e[2j");
-}
+void term_resetCursor() { printf("\e[H"); }
+void term_resetColors() { printf("\e[0m"); }
+void term_clear()       { printf("\e[0m\e[H\e[2J"); }
+void term_cursorMove(u16 row, u16 column) { printf("\e[%u;%uH",row,column); }
+void term_cursorHide(bool hide) { printf( hide ? "\e[?25l" : "\e[?25h"); }
