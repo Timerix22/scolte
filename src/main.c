@@ -20,13 +20,11 @@ Maybe tryReadFile(char* filePath){
 i32 main(const i32 argc, const char* const* argv){
 #if _WIN32 || _WIN64
     if(!SetConsoleOutputCP(CP_UTF8)){
-        kprintf("\e[91mcan't set console codepage to utf8");
-        return 1;
+        kprintf("\e[93mcan't set console codepage to utf8");
     }
 #endif
     if(setlocale(LC_ALL, "C.UTF8")==0){ // doesn't work on windows
-        kprintf("\e[91msetlocale failed! (%i)\n", errno);
-        return 1;
+        kprintf("\e[93msetlocale failed! (%i)\n", errno);
     }
 
     // term_cursorHide(true);
