@@ -8,12 +8,54 @@ extern "C" {
 #include "../../kerep/src/Array/Array.h"
 #include "../term/term.h"
 #include "../encoding/encoding.h"
+#include "Dtsod/tui_dtsod.h"
 #include "UIError.h"
 
+//////////////////////////////////////
+//            Prototypes            //
+//////////////////////////////////////
 
-/// initializes type descriptors for this project's types
-/// call this function between kt_beginInit() and kt_endInit()
-void kt_initScolteTypes();
+typedef struct UIElement UIElement;
+typedef UIElement* UIElement_Ptr;
+typedef struct Renderer Renderer;
+typedef struct DrawingArea DrawingArea;
+
+///@return Maybe<UIElement_Ptr>
+typedef UI_THROWING_FUNC_DECL( (*UIElement_draw_t)(Renderer* renderer, UIElement_Ptr self, const DrawingArea area) );
+
+///@return Maybe<UIElement_Ptr>
+typedef UI_THROWING_FUNC_DECL( (*UIElement_deserialize_t)(Dtsod* dtsod) );
+
+
+//////////////////////////////////////
+//          UI Type System          //
+//////////////////////////////////////
+
+STRUCT(UITDescriptor,
+    ktDescriptor* type;
+    UIElement_draw_t draw;
+    UIElement_deserialize_t deserialize;
+)
+
+#define uit_declare(TYPE) extern UITDescriptor UITDescriptor_##TYPE;
+
+#define uit_define(TYPE, FREE_F, TOSTRING_F, DRAW_F, DESERIALIZE_F) kt_define(TYPE, FREE_F, TOSTRING_F) \
+    UITDescriptor UITDescriptor_##TYPE={ \
+        .draw=DRAW_F, \
+        .deserialize=DESERIALIZE_F \
+    };
+
+/// call this between kt_beginInit() and kt_endInit()
+void kt_beginInitTUI();
+/// call this between kt_beginInitTUI() and kt_endInitTUI()
+void Scolte_init();
+/// call this between kt_beginInit() and kt_endInit()
+void kt_endInitTUI();
+// call this before kt_free()
+void Scolte_free();
+
+UITDescriptor* UITDescriptor_getById(ktid i);
+UITDescriptor* UITDescriptor_getByName(char* name);
 
 //////////////////////////////////////
 //              Enums               //
@@ -26,6 +68,7 @@ PACKED_ENUM(UIBorderThickness,
     UIBorder_Double,
     UiBorder_NoBorder /* no space */
 )
+
 
 //////////////////////////////////////
 //          Small structs           //
@@ -74,34 +117,32 @@ UI_THROWING_FUNC_DECL(Renderer_drawLineX(Renderer* renderer, TermCharInfo tci, u
 UI_THROWING_FUNC_DECL(Renderer_drawLineY(Renderer* renderer, TermCharInfo tci, u16 x, u16 y, u16 length));
 UI_THROWING_FUNC_DECL(Renderer_drawBorder(Renderer* renderer, UIBorder border, const DrawingArea area));
 
+
 //////////////////////////////////////
 //    UIElement abstract struct     //
 //////////////////////////////////////
 
-typedef struct UIElement UIElement;
-typedef UIElement* UIElement_Ptr;
-typedef UI_THROWING_FUNC_DECL((*UIElement_draw_t)(Renderer* renderer, UIElement_Ptr self, const DrawingArea area));
-
-#define UIElement_no_scaling (u16)0
-
 STRUCT(UIElement,
-    ktDescriptor* type;
+    UITDescriptor* ui_type;
+    char* name;
     u16 min_width;
     u16 min_height;
     u16 width_scaling; 
     u16 height_scaling; 
     termcolor color;
     UIBorder border;
-    UIElement_draw_t draw;
 )
+Autoarr_declare(UIElement_Ptr)
+Array_declare(UIElement)
+
+#define UIElement_no_scaling (u16)0
 
 /// proper way to free UIElement and all its members 
 void UIElement_destroy(UIElement_Ptr self);
-#define UIElement_draw(RENDERER, UIE_PTR, PLACE_RECT) \
-    ((UIElement_Ptr)UIE_PTR)->draw(RENDERER, UIE_PTR, PLACE_RECT)
 
-Autoarr_declare(UIElement_Ptr)
-Array_declare(UIElement)
+#define UIElement_draw(RENDERER, UIE_PTR, PLACE_RECT) \
+    (UIE_PTR)->ui_type->draw(RENDERER, UIE_PTR, PLACE_RECT)
+
 
 //////////////////////////////////////
 //      UIElement derivatives       //
@@ -115,11 +156,20 @@ STRUCT(Grid,
     u16 rows;
     UIElement_Ptr* ui_elements; /* UIElement[rows][columns] */
 )
+uit_declare(Grid);
 
-Grid* Grid_create(u16 columns, u16 rows, UIElement_Ptr* ui_elements);
+Grid* Grid_create(char* name, u16 columns, u16 rows, UIElement_Ptr* ui_elements);
 UIElement_Ptr Grid_get(Grid* grid, u16 column, u16 row);
 void Grid_set(Grid* grid, u16 column, u16 row, UIElement_Ptr value);
 
+#define Grid_foreach(GRID_PTR, ELEM_VAR_NAME, CODE...) { \
+    for(u16 _g_r = 0; _g_r < GRID_PTR->rows; _g_r++){ \
+        for(u16 _g_c = 0; _g_c < GRID_PTR->columns; _g_c++){ \
+            UIElement_Ptr ELEM_VAR_NAME = Grid_get(GRID_PTR, _g_c, _g_r); \
+            { CODE; } \
+        } \
+    } \
+}
 
 //////         TextBlock        //////
 
@@ -127,9 +177,10 @@ STRUCT(TextBlock,
     UIElement base;
     string text;
 )
+uit_declare(TextBlock);
 
 /// creates a TextBlock with a copy of text
-TextBlock* TextBlock_create(string text);
+TextBlock* TextBlock_create(char* name, string text);
 
 #if __cplusplus
 }

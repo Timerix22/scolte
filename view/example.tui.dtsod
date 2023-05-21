@@ -1,0 +1,31 @@
+TUI_version: 1;
+namespace: "example_namespace"
+
+$ui: {
+	name: "UIElement",
+	type: "UIElement",
+	min_width: 4,
+	max_width: 4,
+	width_scaling: 0,
+	height_scaling: 0,
+	bg_color: "black",
+	fg_color: "white",
+	border: {
+		top: "hidden",
+		bottom: "no",
+		left: "thick",
+		right: "double",
+		fg_color: "dark_cyan",
+		bg_color: "gray";
+	};
+};
+
+$ui: [
+	name: "Grid",
+	type: "Grid",
+	content: [
+		// column
+		[ "@UIElement" ], // row
+		[ "@namespace.element1" ], // row
+	];
+];

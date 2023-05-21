@@ -7,7 +7,8 @@ extern "C" {
 #include "../../kerep/src/base/base.h"
 
 PACKED_ENUM(UIError, 
-    UIError_Success=0,
+    UIError_Success=ERR_IO_EOF+1,
+    UIError_NotImplemented,
     UIError_NullPtr,
     UIError_InvalidHeight, UIError_InvalidWidth,
     UIError_InvalidX, UIError_InvalidY,

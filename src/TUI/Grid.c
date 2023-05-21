@@ -16,15 +16,6 @@ void Grid_set(Grid* grid, u16 column, u16 row, UIElement_Ptr value){
     *_Grid_getPtr(grid, column, row)=value;
 }
 
-#define Grid_foreach(GRID_PTR, ELEM_VAR_NAME, CODE...){ \
-    for(u16 _g_r = 0; _g_r < GRID_PTR->rows; _g_r++){ \
-        for(u16 _g_c = 0; _g_c < GRID_PTR->columns; _g_c++){ \
-            UIElement_Ptr ELEM_VAR_NAME = Grid_get(GRID_PTR, _g_c, _g_r); \
-            { CODE } \
-        } \
-    } \
-}
-
 void Grid_freeMembers(void* _self){
     Grid* self=(Grid*)_self;
     Grid_foreach(self, el,
@@ -45,12 +36,36 @@ UI_Maybe Grid_draw(Renderer* renderer, UIElement_Ptr _self, const DrawingArea ar
     return MaybeNull;
 }
 
-kt_define(Grid, Grid_freeMembers, NULL);
+UI_Maybe Grid_deserialize(Dtsod* dtsod){
+    Grid gr;
+    Unitype uni;
+    Autoarr(UIElement_Ptr)* content=Autoarr_create(UIElement_Ptr, 64, 8);
 
-Grid* Grid_create(u16 columns, u16 rows, UIElement_Ptr* ui_elements){
+    UI_try(UIElement_deserializeBase(dtsod, &gr.base), _91875, ;);
+    Dtsod_get_necessary(dtsod, "content"){
+        Autoarr(Unitype)* _content=uni.VoidPtr;
+        Autoarr_foreach(_content, _row,
+            Autoarr(Unitype)* row=_row.VoidPtr;
+            Autoarr_foreach(row, _elem_d, 
+                Dtsod* elem_dtsod=_elem_d.VoidPtr;
+                UI_try(UIElement_deserialize(elem_dtsod), _m_uie, ;);
+                Autoarr_add(content, (UIElement_Ptr)_m_uie.value.VoidPtr);
+            )
+        );
+    }
+
+    Grid* ptr=malloc(sizeof(*ptr));
+    *ptr=gr;
+    return SUCCESS(UniHeapPtr(TextBlock, ptr));
+}
+
+
+uit_define(Grid, Grid_freeMembers, NULL, Grid_draw, Grid_deserialize);
+
+Grid* Grid_create(char* name, u16 columns, u16 rows, UIElement_Ptr* ui_elements){
     Grid* grid=malloc(sizeof(Grid));
     *grid=(Grid){
-        .base=__UIElement_createDefault(ktid_name(Grid), Grid_draw),
+        .base=_UIElement_initBaseDefault(name, &UITDescriptor_Grid),
         .columns=columns,
         .rows=rows,
         .ui_elements=ui_elements

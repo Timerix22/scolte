@@ -1,4 +1,6 @@
 #!/bin/bash
+set -eo pipefail
+
 source cbuild/colors.sh
 source cbuild/functions.sh
 touch ".rebuild_$1.tmp"

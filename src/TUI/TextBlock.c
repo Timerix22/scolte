@@ -18,11 +18,27 @@ UI_Maybe TextBlock_draw(Renderer* renderer, UIElement_Ptr _self, const DrawingAr
     return MaybeNull;
 }
 
-kt_define(TextBlock, TextBlock_freeMembers, NULL);
+UI_Maybe TextBlock_deserialize(Dtsod* dtsod){
+    TextBlock tb;
+    Unitype uni;
 
-TextBlock* TextBlock_create(string text){
+    UI_try(UIElement_deserializeBase(dtsod, &tb.base), _8751, ;);
+    Dtsod_get_necessary(dtsod, "text"){
+        char* cptr=uni.VoidPtr;
+        tb.text=(string){.ptr=cptr, .length=cptr_length(cptr)};
+    }
+
+    TextBlock* ptr=malloc(sizeof(*ptr));
+    *ptr=tb;
+    return SUCCESS(UniHeapPtr(TextBlock, ptr));
+}
+
+
+uit_define(TextBlock, TextBlock_freeMembers, NULL,TextBlock_draw, TextBlock_deserialize);
+
+TextBlock* TextBlock_create(char* name, string text){
     TextBlock* textBlock=malloc(sizeof(TextBlock));
-    textBlock->base=__UIElement_createDefault(ktid_name(TextBlock), TextBlock_draw);
+    textBlock->base=_UIElement_initBaseDefault(name, &UITDescriptor_TextBlock);
     textBlock->text=string_copy(text);
     return textBlock;
 }

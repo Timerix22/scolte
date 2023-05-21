@@ -1,6 +1,7 @@
 # build results
 bin/
 obj/
+src/generated/
 *.log
 *.tmp
 

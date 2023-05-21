@@ -1,0 +1,10 @@
+TUI_version: 1;
+namespace: "main";
+
+grid: [
+	name: "Grid",
+	type: "Grid",
+	// column
+	[ "@namespace.element0" ], // row
+	[ "@namespace.element1" ], // row
+];

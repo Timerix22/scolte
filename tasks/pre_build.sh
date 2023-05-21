@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 # if $lib_project.a doesn't exist or rebuild_* task was executed, builds static lib
 function handle_static_dependency {
@@ -23,3 +24,5 @@ function handle_static_dependency {
 
 handle_static_dependency kerep "$DEPS_BUILD_TASK" kerep/bin/kerep.a
 handle_static_dependency utf8proc libutf8proc.a utf8proc/libutf8proc.a
+
+source tasks/build_view.sh
