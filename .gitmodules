@@ -10,3 +10,6 @@
 	path = utf8proc
 	url = https://github.com/Timerix22/utf8proc.git
     branch = my_branch
+[submodule "resource_embedder"]
+	path = resource_embedder
+	url = https://github.com/Timerix22/resource_embedder.git
