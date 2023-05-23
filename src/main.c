@@ -10,6 +10,13 @@
 #define EMBEDDED_RESOURCE_POSTFIX view 
 #include "generated/view.h"
 
+void on_exit(){
+    Scolte_free();
+    kt_free();
+    term_resetColors();
+    term_cursorHide(false);
+}
+
 // Maybe tryReadFile(char* filePath){
 //     if(!file_exists(filePath))
 //         kprintf("file doesnt exist, creating new\n");
@@ -26,7 +33,7 @@ UI_Maybe test_example_ui_build() {
 
     // ui from dtsod build example
     UIDtsodParser* p=UIDtsodParser_create();
-    for(int i=0; i<EmbeddedResourceFile_table_view_count; i++){
+    for(unsigned int i=0; i<EmbeddedResourceFile_table_view_count; i++){
         EmbeddedResourceFile rs=EmbeddedResourceFile_table_view[i];
         UI_try(UIDtsodParser_parseText(p, rs.path, rs.data),
             _91624, UIDtsodParser_destroy(p));
@@ -34,8 +41,9 @@ UI_Maybe test_example_ui_build() {
     UI_try(UIDtsodParser_constructUIContext(p), _m_ui_context, UIDtsodParser_destroy(p));
     UIContext* ui_context=_m_ui_context.value.VoidPtr;
     UIDtsodParser_destroy(p);
-    UIContext_get(ui_context, example_namespace, text_box, TextBlock, UIContext_destroy(ui_context));
-    example_namespace_text_box->text=string_fromCptr("text replaced");
+    UIContext_get(ui_context, example, textblock, TextBlock, UIContext_destroy(ui_context));
+    example_textblock->text=string_fromCptr("text replaced");
+    UIContext_destroy(ui_context);
     return MaybeNull;
 }
 
@@ -49,8 +57,8 @@ i32 main(const i32 argc, const char* const* argv){
         kprintf("\e[93msetlocale failed! (%i)\n", errno);
     }
 
-    // term_cursorHide(true);
-    // term_clear();
+    term_cursorHide(true);
+    term_clear();
 
     // kerep type system
     kt_beginInit();
@@ -68,31 +76,29 @@ i32 main(const i32 argc, const char* const* argv){
     
     // create file
     /* char* filePath= argc>1 ? argv[argc-1] : "new_file.txt";
-    tryLast(tryReadFile(filePath), _m_text);
+    tryLast(tryReadFile(filePath), _m_text, on_exit());
     char* text=(char*)_m_text.value.VoidPtr;
     fputs(text,stdout); */
 
     // render ui
-    Renderer* renderer=Renderer_create();
-    TextBlock* testTextBlock=TextBlock_create("TextBlock1", string_fromCptr("some example text"));
-    Autoarr(UIElement_Ptr)* grid_content=Autoarr_create(UIElement_Ptr, 1, 64);
-    Autoarr_add(grid_content, (UIElement_Ptr)testTextBlock);
-    Grid* mainGrid=Grid_create("MainGrid", 1,1, Autoarr_toArray(grid_content));
-    Autoarr_free(grid_content, true);
-    tryLast(UIElement_draw(renderer, (UIElement_Ptr)mainGrid, ((DrawingArea){.x=10, .y=4, .h=7, .w=24})),_);
-    tryLast(Renderer_drawFrame(renderer),_2);
-    // free ui memory
-    UIElement_destroy((UIElement_Ptr)mainGrid);
-    Renderer_destroy(renderer);
+    // Renderer* renderer=Renderer_create();
+    // TextBlock* testTextBlock=TextBlock_create("TextBlock1", string_fromCptr("some example text"));
+    // Autoarr(UIElement_Ptr)* grid_content=Autoarr_create(UIElement_Ptr, 1, 64);
+    // Autoarr_add(grid_content, (UIElement_Ptr)testTextBlock);
+    // Grid* mainGrid=Grid_create("MainGrid", 1,1, Autoarr_toArray(grid_content));
+    // Autoarr_free(grid_content, true);
+    // tryLast(UIElement_draw(renderer, (UIElement_Ptr)mainGrid, 
+    //        ((DrawingArea){.x=10, .y=4, .h=7, .w=24})),
+    //    _, on_exit());
+    // tryLast(Renderer_drawFrame(renderer),_2);
+    // // free ui memory
+    // UIElement_destroy((UIElement_Ptr)mainGrid);
+    // Renderer_destroy(renderer);
     
     // TODO signal( SIGWINCH, redraw );
 
-    // tryLast(test_example_ui_build(), _6981751);
+    tryLast(test_example_ui_build(), _6981751, on_exit());
     
-    // exit
-    Scolte_free();
-    kt_free();
-    term_resetColors();
-    term_cursorHide(false);
+    on_exit();
     return 0;
 }

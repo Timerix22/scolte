@@ -9,8 +9,8 @@
 void UIDtsodFileModel_freeMembers(void* _fm){
     UIDtsodFileModel* fm=_fm;
     DtsodV24_free(fm->dtsod);
-    free(fm->dtsod_text);
-    free(fm->file_name);
+    // free(fm->dtsod_text);
+    // free(fm->file_name);
 }
 
 kt_define(UIDtsodFileModel, UIDtsodFileModel_freeMembers, NULL);
@@ -58,7 +58,7 @@ UI_Maybe UIDtsodParser_parseFile(UIDtsodParser* parser, char* file_path){
 UI_Maybe UIDtsodParser_parseText(UIDtsodParser* parser, char* file_name_placeholder, char* text){
     UI_try(DtsodV24_deserialize(text), _m_dtsod, ;);
     UIDtsodFileModel fm={
-        .file_name=cptr_copy(file_name_placeholder),
+        .file_name=file_name_placeholder,
         .dtsod_text=text,
         .dtsod=_m_dtsod.value.VoidPtr
     };
@@ -82,9 +82,11 @@ kt_define(UIContext, _UIContext_freeMembers, NULL);
 
 
 UI_Maybe UIElement_deserialize(Dtsod* dtsod){
-    Unitype uni;
-    Dtsod_get_necessary(dtsod, "type");
-    UITDescriptor* ui_type=uni.VoidPtr;
+    char* type_name;
+    Dtsod_tryGet_cptr(dtsod, "type", type_name, true);
+    UITDescriptor* ui_type=UITDescriptor_getByName(type_name);
+    if(ui_type==NULL)
+        UI_safethrow_msg(cptr_concat("invalid type '", type_name, "'"), ;);
     UI_try(ui_type->deserialize(dtsod), _m_ui, ;);
     return _m_ui;
 }
@@ -96,16 +98,22 @@ UI_Maybe UIDtsodParser_constructUIContext(UIDtsodParser* parser){
     }
 
     Autoarr_foreach(parser->file_models, fm,
-        Hashtable_foreach(fm.dtsod, dtsod_elem,
-            if(cptr_compare(dtsod_elem.key, "tui_dtsod_version")){
+        i32 file_parser_version;
+        Dtsod_tryGet_i64(fm.dtsod, "parser_version", file_parser_version, true);
+        if(file_parser_version!=UIDtsodParser_version){
+            UI_safethrow(UIError_InvalidVersion,;);
+        }
+        
+        char* file_namespace;
+        Dtsod_tryGet_cptr(fm.dtsod, "namespace", file_namespace, true);
 
-            }
-            else if(cptr_compare(dtsod_elem.key, "ui")) {
+        Hashtable_foreach(fm.dtsod, dtsod_elem,
+            if(cptr_compare(dtsod_elem.key, "ui")) {
                 Autoarr_Unitype* ui_ar=dtsod_elem.value.VoidPtr;
                 Autoarr_foreach(ui_ar, ui_el_dtsod,
                     UI_try(UIElement_deserialize(ui_el_dtsod.VoidPtr),_m_ui,;);
                     UIElement_Ptr new_el=_m_ui.value.VoidPtr;
-                    UI_try( UIContext_add(parser->context, new_el), _a76515, ;);
+                    UI_try( UIContext_add(parser->context, file_namespace, new_el), _a76515, ;);
                 );
             }
         );
@@ -132,10 +140,12 @@ UI_Maybe _UIContext_get(UIContext* context, char* name, ktid type_id){
     return SUCCESS(val);
 }
 
-UI_Maybe UIContext_add(UIContext* context, _UIElement_Ptr _new_el){
+UI_Maybe UIContext_add(UIContext* context, char* namespace, _UIElement_Ptr _new_el){
     UIElement_Ptr new_el=_new_el;
     Unitype u=UniPtr(new_el->ui_type->type->id, new_el, true);
-    if(!Hashtable_tryAdd(context->ui_elements, new_el->name, u))
-        UI_safethrow_msg(cptr_concat("element with name <", new_el->name, "> already exists in context"), ;);
+    char* namespace_and_name=cptr_concat(namespace, "_", new_el->name);
+    if(!Hashtable_tryAdd(context->ui_elements, namespace_and_name, u))
+        UI_safethrow_msg(cptr_concat("element with name <", new_el->name, "> already exists in context"), 
+        free(namespace_and_name));
     return MaybeNull;
 }

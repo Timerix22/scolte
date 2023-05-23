@@ -45,40 +45,53 @@ UI_Maybe UIElement_validate(UIElement_Ptr u, DrawingArea a){
 
 
 UI_Maybe UIElement_deserializeBase(Dtsod* dtsod, UIElement* base){
-    Unitype uni;
-    Dtsod_get_necessary(dtsod, "name");
-    char* name=uni.VoidPtr;
-    Dtsod_get_necessary(dtsod, "type");
-    UITDescriptor* ui_type=uni.VoidPtr;
+    char* name;
+    Dtsod_tryGet_cptr(dtsod, "name", name, true);
+
+    char* type_name;
+    Dtsod_tryGet_cptr(dtsod, "type", type_name, true);
+    UITDescriptor* ui_type=UITDescriptor_getByName(type_name);
+    if(ui_type==NULL)
+        UI_safethrow_msg(cptr_concat("invalid type '", type_name, "'"), ;);
+        
     *base=_UIElement_initBaseDefault(name, ui_type);
-    Dtsod_get_optional(dtsod, "min_width")
-        base->min_width=uni.UInt64;
-    Dtsod_get_optional(dtsod, "min_height")
-        base->min_height=uni.UInt64;
-    Dtsod_get_optional(dtsod, "width_scaling")
-        base->width_scaling=uni.UInt64;
-    Dtsod_get_optional(dtsod, "height_scaling")
-        base->height_scaling=uni.UInt64;
-    Dtsod_get_optional(dtsod, "bg_color")
-        set_color(uni.VoidPtr, base->color);
-    Dtsod_get_optional(dtsod, "fg_color")
-        set_color(uni.VoidPtr, base->color);
+
+    Dtsod_tryGet_i64(dtsod, "min_width", base->min_width, false);
+    Dtsod_tryGet_i64(dtsod, "min_height", base->min_height, false);
+    Dtsod_tryGet_i64(dtsod, "width_scaling", base->width_scaling, false);
+    Dtsod_tryGet_i64(dtsod, "height_scaling", base->height_scaling, false);
+    char *bg_color_name, *fg_color_name;
+    Dtsod_tryGet_cptr(dtsod, "bg_color", bg_color_name, false,
+        set_color(bg_color_name, base->color);
+    );
+    Dtsod_tryGet_cptr(dtsod, "fg_color", fg_color_name, false,
+        set_color(fg_color_name, base->color);
+    );
     base->border.color=base->color;
-    Dtsod_get_optional(dtsod, "border"){
-        Dtsod* border_dtsod=uni.VoidPtr;
-        Dtsod_get_optional(border_dtsod, "top")
-            set_border_thickness(uni.VoidPtr, base->border.top);
-        Dtsod_get_optional(border_dtsod, "bottom")
-            set_border_thickness(uni.VoidPtr, base->border.bottom);
-        Dtsod_get_optional(border_dtsod, "left")
-            set_border_thickness(uni.VoidPtr, base->border.left);
-        Dtsod_get_optional(border_dtsod, "right")
-            set_border_thickness(uni.VoidPtr, base->border.right);
-        Dtsod_get_optional(dtsod, "bg_color")
-            set_color(uni.VoidPtr, base->border.color);
-        Dtsod_get_optional(dtsod, "fg_color")
-            set_color(uni.VoidPtr, base->border.color);
-    }
+
+    Dtsod* border_dtsod;
+    Dtsod_tryGet_Hashtable(dtsod, "border", border_dtsod, false, {
+        char* border_thickness_str;
+        Dtsod_tryGet_cptr(border_dtsod, "top", border_thickness_str, false,
+            set_border_thickness(border_thickness_str, base->border.top);
+        );
+        Dtsod_tryGet_cptr(border_dtsod, "bottom", border_thickness_str, false,
+            set_border_thickness(border_thickness_str, base->border.bottom);
+        );
+        Dtsod_tryGet_cptr(border_dtsod, "left", border_thickness_str, false,
+            set_border_thickness(border_thickness_str, base->border.left);
+        );
+        Dtsod_tryGet_cptr(border_dtsod, "right", border_thickness_str, false,
+            set_border_thickness(border_thickness_str, base->border.right);
+        );
+        char *bg_color_name, *fg_color_name;
+        Dtsod_tryGet_cptr(dtsod, "bg_color", bg_color_name, false,
+            set_color(bg_color_name, base->border.color);
+        );
+        Dtsod_tryGet_cptr(dtsod, "fg_color", fg_color_name, false,
+            set_color(fg_color_name, base->border.color);
+        );
+    });
 
     return MaybeNull;
 }

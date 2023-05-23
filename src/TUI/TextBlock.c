@@ -1,8 +1,8 @@
 #include "tui_internal.h"
 
 void TextBlock_freeMembers(void* _self){
-    TextBlock* self=(TextBlock*)_self;
-    free(self->text.ptr);
+    // TextBlock* self=(TextBlock*)_self;
+    // free(self->text.ptr);
 }
 
 UI_Maybe TextBlock_draw(Renderer* renderer, UIElement_Ptr _self, const DrawingArea area){
@@ -20,15 +20,13 @@ UI_Maybe TextBlock_draw(Renderer* renderer, UIElement_Ptr _self, const DrawingAr
 
 UI_Maybe TextBlock_deserialize(Dtsod* dtsod){
     TextBlock tb;
-    Unitype uni;
 
     UI_try(UIElement_deserializeBase(dtsod, &tb.base), _8751, ;);
-    Dtsod_get_necessary(dtsod, "text"){
-        char* cptr=uni.VoidPtr;
-        tb.text=(string){.ptr=cptr, .length=cptr_length(cptr)};
-    }
-
+    char* _text;
+    Dtsod_tryGet_cptr(dtsod, "text", _text, true);
+    tb.text=string_fromCptr(_text);
     TextBlock* ptr=malloc(sizeof(*ptr));
+    
     *ptr=tb;
     return SUCCESS(UniHeapPtr(TextBlock, ptr));
 }
@@ -39,6 +37,6 @@ uit_define(TextBlock, TextBlock_freeMembers, NULL,TextBlock_draw, TextBlock_dese
 TextBlock* TextBlock_create(char* name, string text){
     TextBlock* textBlock=malloc(sizeof(TextBlock));
     textBlock->base=_UIElement_initBaseDefault(name, &UITDescriptor_TextBlock);
-    textBlock->text=string_copy(text);
+    textBlock->text=text;
     return textBlock;
 }

@@ -1,10 +1,12 @@
-TUI_version: 1;
+parser_version: 1;
 namespace: "main";
 
-grid: [
-	name: "Grid",
+$ui: {
+	name: "main_grid",
 	type: "Grid",
-	// column
-	[ "@namespace.element0" ], // row
-	[ "@namespace.element1" ], // row
-];
+	content: [
+		# column
+		[ "@namespace.element0" ], # row
+		[ "@namespace.element1" ], # row
+	];
+};

@@ -12,8 +12,7 @@ void FrameBuffer_freeMembers(void* _self){
 kt_define(FrameBuffer, FrameBuffer_freeMembers, NULL);
 
 /// creates new frame buffer and fills it with spaces
-UI_THROWING_FUNC_DECL(FrameBuffer_create(FrameBuffer* fb));
-Maybe FrameBuffer_create(FrameBuffer* fb){
+void FrameBuffer_recreate(FrameBuffer* fb){
     if(!term_getSize(&fb->size)){
         fb->size=term_default_size;
         //TODO log error
@@ -26,8 +25,6 @@ Maybe FrameBuffer_create(FrameBuffer* fb){
     
     for(u32 i=0; i<length; i++)
         fb->data[i]=TCI(TERMCHAR(' '), kp_bgGray|kp_fgGray);
-
-    return MaybeNull;
 }
 
 void Renderer_freeMembers(void * _self){
@@ -54,7 +51,7 @@ UI_Maybe __Renderer_drawFrame(Renderer* self){
     // save current buffer
     FrameBuffer buf=self->frameBuffer;
     // recreate frame buffer
-    UI_try(FrameBuffer_create(&self->frameBuffer),_,;);
+    FrameBuffer_recreate(&self->frameBuffer);
 
     for(u16 y=0; y<buf.size.rows; y++){
         for(u16 x=0; x<buf.size.cols; x++){
@@ -86,7 +83,7 @@ kt_define(Renderer, Renderer_freeMembers, NULL);
 
 Renderer* Renderer_create(){
     Renderer* renderer=malloc(sizeof(Renderer));
-    tryLast(FrameBuffer_create(&renderer->frameBuffer),_);
+    FrameBuffer_recreate(&renderer->frameBuffer);
     renderer->set=__Renderer_set;
     renderer->drawFrame=__Renderer_drawFrame;
     return renderer;

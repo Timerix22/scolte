@@ -1,9 +1,9 @@
-TUI_version: 1;
-namespace: "example_namespace"
+parser_version: 1;
+namespace: "example";
 
 $ui: {
-	name: "UIElement",
-	type: "UIElement",
+	name: "textblock",
+	type: "TextBlock",
 	min_width: 4,
 	max_width: 4,
 	width_scaling: 0,
@@ -17,15 +17,16 @@ $ui: {
 		right: "double",
 		fg_color: "dark_cyan",
 		bg_color: "gray";
-	};
+	},
+	text: "UwU",
 };
 
-$ui: [
+$ui: {
 	name: "Grid",
 	type: "Grid",
 	content: [
-		// column
-		[ "@UIElement" ], // row
-		[ "@namespace.element1" ], // row
+		# column
+		[ "@UIElement" ], # row
+		[ "@namespace.element1" ], # row
 	];
-];
+};

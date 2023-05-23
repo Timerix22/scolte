@@ -67,18 +67,10 @@ void termcolor_table_init(){
     Hashtable_addMany(_colors_table, pairs, sizeof(pairs)/sizeof(KVPair));
 }
 
-int termcolor_getByName(char* color_name){
-    char* color_name_lower=cptr_toLower(color_name);
-    Unitype uni;
-    if(!Hashtable_tryGet(_colors_table, color_name_lower, &uni))
-        return -1;
-    return uni.UInt64;
-}
-
-Hashtable* _UIBorderThickness_table=NULL;
+Hashtable* _border_t_table=NULL;
 
 void UIBorderThickness_table_init(){
-    _UIBorderThickness_table=Hashtable_create();
+    _border_t_table=Hashtable_create();
     KVPair pairs[]={
         enum_pair("hidden", UIBorder_Hidden),
         enum_pair("0", UIBorder_Hidden),
@@ -91,15 +83,7 @@ void UIBorderThickness_table_init(){
         enum_pair("noborder", UiBorder_NoBorder),
         enum_pair("no", UiBorder_NoBorder)
     };
-    Hashtable_addMany(_UIBorderThickness_table, pairs, sizeof(pairs)/sizeof(KVPair));
-}
-
-int UIBorderThickness_getByName(char* name){
-    char* name_lower=cptr_toLower(name);
-    Unitype uni;
-    if(!Hashtable_tryGet(_UIBorderThickness_table, name_lower, &uni))
-        return -1;
-    return uni.UInt64;
+    Hashtable_addMany(_border_t_table, pairs, sizeof(pairs)/sizeof(KVPair));
 }
 
 void UI_enum_tables_init(){
@@ -109,5 +93,17 @@ void UI_enum_tables_init(){
 
 void UI_enum_tables_free(){
     Hashtable_free(_colors_table);
-    Hashtable_free(_UIBorderThickness_table);
+    Hashtable_free(_border_t_table);
 }
+
+int enum_getByName(Hashtable* table, char* name){
+    char* name_lower=cptr_toLower(name);
+    Unitype uni;
+    if(!Hashtable_tryGet(table, name_lower, &uni))
+        return -1;
+    free(name_lower);
+    return uni.UInt64;
+}
+
+int termcolor_getByName(char* name){ return enum_getByName(_colors_table, name); }
+int UIBorderThickness_getByName(char* name){ return enum_getByName(_border_t_table, name); }

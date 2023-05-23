@@ -154,11 +154,11 @@ STRUCT(Grid,
     UIElement base;
     u16 columns;
     u16 rows;
-    UIElement_Ptr* ui_elements; /* UIElement[rows][columns] */
+    UIElement_Ptr* content; /* UIElement[rows][columns] */
 )
 uit_declare(Grid);
 
-Grid* Grid_create(char* name, u16 columns, u16 rows, UIElement_Ptr* ui_elements);
+Grid* Grid_create(char* name, u16 columns, u16 rows, UIElement_Ptr* content);
 UIElement_Ptr Grid_get(Grid* grid, u16 column, u16 row);
 void Grid_set(Grid* grid, u16 column, u16 row, UIElement_Ptr value);
 

@@ -25,6 +25,8 @@ example_namespace_text_box->text=string_fromCptr("text replaced");
 //////////////////////////////////////
 //          UIDtsodParser           //
 //////////////////////////////////////
+#define UIDtsodParser_version 1
+
 typedef struct UIDtsodParser UIDtsodParser;
 
 UIDtsodParser* UIDtsodParser_create();
@@ -56,7 +58,7 @@ UI_THROWING_FUNC_DECL(_UIContext_get(UIContext* context, char* name, ktid type_i
     TYPE* NAMESPACE##_##NAME=_m_##NAMESPACE##_##NAME.value.VoidPtr;
 
 ///@return Maybe<void>
-UI_THROWING_FUNC_DECL(UIContext_add(UIContext* context, _UIElement_Ptr new_el));
+UI_THROWING_FUNC_DECL(UIContext_add(UIContext* context, char* namespace, _UIElement_Ptr new_el));
 
 
 //////////////////////////////////////
@@ -68,12 +70,43 @@ UI_THROWING_FUNC_DECL(UIContext_add(UIContext* context, _UIElement_Ptr new_el));
 UI_THROWING_FUNC_DECL( UIElement_deserialize(Dtsod* dtsod) );
 
 
-#define Dtsod_get_necessary(dtsod, key) \
-    if(!Hashtable_tryGet(dtsod, key, &uni)) \
-        UI_safethrow(UIError_NullPtr, ;);
+#define __def_Dtsod_tryGet(dtsod, key, var_name, is_neccecary, TYPE, TYPE_ID, UNI_FIELD, code...) { \
+    Unitype uni; \
+    if(Hashtable_tryGet(dtsod, key, &uni)) { \
+        if(!UniCheckTypeId(uni, TYPE_ID)) \
+            UI_safethrow_msg(cptr_concat("tried to get '",key,"' of type '",#TYPE, \
+                "', but got invalid type id '",toString_i64(uni.typeId),"'"), ;); \
+        var_name=uni.UNI_FIELD; \
+        { code; } \
+    } \
+    else if(is_neccecary) \
+        UI_safethrow_msg(cptr_concat("can't find key '", key, "'"), ;); \
+}
 
-#define Dtsod_get_optional(dtsod, key) \
-    if(Hashtable_tryGet(dtsod, key, &uni))
+#define Dtsod_tryGet_i64(dtsod, key, var_name, is_neccecary, code...) \
+    __def_Dtsod_tryGet(dtsod, key, var_name, is_neccecary, i64, ktid_name(i64), Int64, code)
+
+#define Dtsod_tryGet_u64(dtsod, key, var_name, is_neccecary, code...) \
+    __def_Dtsod_tryGet(dtsod, key, var_name, is_neccecary, u64, ktid_name(u64), UInt64, code)
+
+#define Dtsod_tryGet_f64(dtsod, key, var_name, is_neccecary, code...) \
+    __def_Dtsod_tryGet(dtsod, key, var_name, is_neccecary, f64, ktid_name(f64), Float64, code)
+
+#define Dtsod_tryGet_bool(dtsod, key, var_name, is_neccecary, code...) \
+    __def_Dtsod_tryGet(dtsod, key, var_name, is_neccecary, bool, ktid_name(bool), Bool, code)
+
+#define Dtsod_tryGet_ptr(dtsod, key, type, var_name, is_neccecary, code...) \
+    __def_Dtsod_tryGet(dtsod, key, var_name, is_neccecary, type*, ktid_ptrName(type), VoidPtr, code)
+
+#define Dtsod_tryGet_cptr(dtsod, key, var_name, is_neccecary, code...) \
+    Dtsod_tryGet_ptr(dtsod, key, char, var_name, is_neccecary, code)
+
+#define Dtsod_tryGet_Hashtable(dtsod, key, var_name, is_neccecary, code...) \
+    Dtsod_tryGet_ptr(dtsod, key, Hashtable, var_name, is_neccecary, code)
+
+#define Dtsod_tryGet_Autoarr(dtsod, key, var_name, is_neccecary, code...) \
+    Dtsod_tryGet_ptr(dtsod, key, Autoarr(Unitype), var_name, is_neccecary, code)
+
 
 
 #if __cplusplus
