@@ -12,12 +12,12 @@ build_exec: profile
 build_exec_dbg:
 	@cbuild/call_task.sh build_exec_dbg 2>&1 | tee make_raw.log
 
-# recompile kerep.a in the next build task
+# recompile libkerep.a in the next build task
 rebuild_kerep: 
-	@tasks/rebuild_lib.sh kerep
-# recompile utf8proc.a in the next build task
+	@cbuild/rebuild_dep.sh libkerep.a 2>&1 | tee make_raw.log
+# recompile libutf8proc.a in the next build task
 rebuild_utf8proc: 
-	@tasks/rebuild_lib.sh utf8proc
+	@cbuild/rebuild_dep.sh libutf8proc.a 2>&1 | tee make_raw.log
 
 rebuild_all: rebuild_kerep rebuild_utf8proc
 
@@ -45,7 +45,14 @@ profile:
 # uses gprof2dot python script to generate function call tree  
 gprof:
 	@cbuild/call_task.sh gprof 2>&1 | tee make_raw.log
-	
+
+# compiles program and runs it with callgrind (part of valgrind)
+# uses gprof2dot python script to generate function call tree (pip install gprof2dot)
+# requires graphviz (https://www.graphviz.org/download/source/)
+# P.S. detailed rezults can be viewed in KCacheGrind
+callgrind:
+	@cbuild/call_task.sh callgrind 2>&1 | tee make_raw.log
+
 # compiles executable with sanitizers and executes it to find errors and warnings
 sanitize:
 	@cbuild/call_task.sh sanitize 2>&1 | tee make_raw.log
