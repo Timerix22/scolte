@@ -106,38 +106,45 @@ UI_Maybe UIDtsodParser_constructUIContext(UIDtsodParser* parser){
         
         char* file_namespace;
         Dtsod_tryGet_cptr(fm.dtsod, "namespace", file_namespace, true);
-
         Hashtable_foreach(fm.dtsod, dtsod_elem,
             if(cptr_compare(dtsod_elem.key, "ui")) {
                 Autoarr_Unitype* ui_ar=dtsod_elem.value.VoidPtr;
                 Autoarr_foreach(ui_ar, ui_el_dtsod,
                     UI_try(UIElement_deserialize(ui_el_dtsod.VoidPtr),_m_ui,;);
                     UIElement_Ptr new_el=_m_ui.value.VoidPtr;
+                    // kprintf("[UIDtsodParser_constructUIContext] %s : %s\n", new_el->name, new_el->ui_type->type->name);
+                    if(new_el->ui_type->type->id==ktid_ptrName(Grid)){
+                        UI_try(_Grid_bindContent((Grid*)new_el, parser->context),_15151,;);
+                    }
                     UI_try( UIContext_add(parser->context, file_namespace, new_el), _a76515, ;);
                 );
             }
         );
     );
 
+    Autoarr_free(parser->file_models,true);
+    parser->file_models=Autoarr_create(UIDtsodFileModel, 64, 32);
     parser->returned_context=true;
     return SUCCESS(UniHeapPtr(UIContext, parser->context));
 }
 
 
-UI_Maybe _UIContext_get(UIContext* context, char* name, ktid type_id){
+UI_Maybe UIContext_getAny(UIContext* context, char* name){
     Unitype val;
     // check name
-    if(!Hashtable_tryGet(context->ui_elements, name, &val)){
+    if(!Hashtable_tryGet(context->ui_elements, name, &val))
         UI_safethrow_msg(cptr_concat("can't get <", name, "> from context"), ;);
-    }
-    // check type
-    UIElement* ptr=val.VoidPtr;
-    if(val.typeId != type_id)
+    return SUCCESS(val);
+}
+
+UI_Maybe _UIContext_get(UIContext* context, char* name, ktid type_id){
+    UI_try(UIContext_getAny(context, name), _m_ui, ;);
+    UIElement* ptr=_m_ui.value.VoidPtr;
+    if(ptr->ui_type->type->id != type_id)
         UI_safethrow_msg(cptr_concat(
             "tried to get ",ktDescriptor_get(type_id)->name, " <",name,"> but it is of type ", ptr->ui_type->type->name
             ), ;);
-    
-    return SUCCESS(val);
+    return _m_ui;
 }
 
 UI_Maybe UIContext_add(UIContext* context, char* namespace, _UIElement_Ptr _new_el){

@@ -6,7 +6,7 @@ $ui: {
 	type: "Grid",
 	content: [
 		# column
-		[ "@namespace.element0" ], # row
-		[ "@namespace.element1" ], # row
+#		[ "namespace.element0" ], # row
+#		[ "namespace.element1" ], # row
 	];
 };

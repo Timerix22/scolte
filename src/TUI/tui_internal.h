@@ -22,7 +22,7 @@ extern termchar UIBorder_char_lb[4][4];
 
 /// extended kt_register
 void __uit_register(ktDescriptor* kt, UITDescriptor* uit);
-#define uit_register(TYPE) kt_register(TYPE); __uit_register(&ktDescriptor_##TYPE, &UITDescriptor_##TYPE)
+#define uit_register(TYPE) kt_register(TYPE); __uit_register(&ktDescriptor_##TYPE##_Ptr, &UITDescriptor_##TYPE)
 
 
 void UI_enum_tables_init();

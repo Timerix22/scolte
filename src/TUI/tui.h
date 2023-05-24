@@ -154,18 +154,43 @@ STRUCT(Grid,
     UIElement base;
     u16 columns;
     u16 rows;
+    bool is_bound;
+    char** content_names;
     UIElement_Ptr* content; /* UIElement[rows][columns] */
 )
 uit_declare(Grid);
 
 Grid* Grid_create(char* name, u16 columns, u16 rows, UIElement_Ptr* content);
-UIElement_Ptr Grid_get(Grid* grid, u16 column, u16 row);
-void Grid_set(Grid* grid, u16 column, u16 row, UIElement_Ptr value);
+///@return Maybe<UIElement*>
+UI_THROWING_FUNC_DECL( Grid_get(Grid* grid, u16 column, u16 row) );
+///@return maybe<void>
+UI_THROWING_FUNC_DECL( Grid_set(Grid* grid, u16 column, u16 row, UIElement_Ptr value));
+///@return Maybe<char*>
+UI_THROWING_FUNC_DECL( _Grid_getName(Grid* grid, u16 column, u16 row) );
+///@return maybe<void>
+UI_THROWING_FUNC_DECL( _Grid_bindContent(Grid* grid, UIContext* context) );
 
-#define Grid_foreach(GRID_PTR, ELEM_VAR_NAME, CODE...) { \
-    for(u16 _g_r = 0; _g_r < GRID_PTR->rows; _g_r++){ \
-        for(u16 _g_c = 0; _g_c < GRID_PTR->columns; _g_c++){ \
-            UIElement_Ptr ELEM_VAR_NAME = Grid_get(GRID_PTR, _g_c, _g_r); \
+#define Grid_foreach(GRID, ELEM_VAR_NAME, CODE...) { \
+    if(!GRID->is_bound) \
+        UI_safethrow_msg(cptr_concat("grid '", GRID->base.ui_type->type->name, \
+        "' content has not been bound"),;); \
+    for(u16 _g_r = 0; _g_r < GRID->rows; _g_r++){ \
+        for(u16 _g_c = 0; _g_c < GRID->columns; _g_c++){ \
+            UI_try(Grid_get(GRID, _g_c, _g_r), _m_g_el,;); \
+            UIElement_Ptr ELEM_VAR_NAME=_m_g_el.value.VoidPtr; \
+            { CODE; } \
+        } \
+    } \
+}
+
+#define Grid_foreachName(GRID, ELEM_VAR_NAME, CODE...) { \
+    if(GRID->is_bound) \
+        UI_safethrow_msg(cptr_concat("grid '", GRID->base.ui_type->type->name, \
+        "' content has been already bound"),;); \
+    for(u16 _g_r = 0; _g_r < GRID->rows; _g_r++){ \
+        for(u16 _g_c = 0; _g_c < GRID->columns; _g_c++){ \
+            UI_try(_Grid_getName(GRID, _g_c, _g_r), _m_g_nm,;); \
+            char* ELEM_VAR_NAME=_m_g_nm.value.VoidPtr; \
             { CODE; } \
         } \
     } \

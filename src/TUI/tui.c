@@ -5,14 +5,14 @@ kt_define(DrawingArea, NULL, NULL);
 kt_define(UIBorder, NULL, NULL);
 kt_define(UITDescriptor, NULL, NULL);
 
-Hashtable* __uit_hashtable=NULL;
+Hashtable* _uit_hashtable=NULL;
 u32 __kt_id_first=-1;
 Autoarr(Pointer)* __uit_temp_arr=NULL;
 UITDescriptor** __uit_descriptors=NULL;
 
 /// call this between kt_beginInit() and kt_endInit()
 void kt_beginInitTUI(){
-    __uit_hashtable=Hashtable_create();
+    _uit_hashtable=Hashtable_create();
     __kt_id_first=ktid_last;
     __uit_temp_arr=Autoarr_create(Pointer, 32, 32);
 }
@@ -25,12 +25,12 @@ void kt_endInitTUI(){
 
 void kt_freeTUI(){
     free(__uit_descriptors);
-    Hashtable_free(__uit_hashtable);
+    Hashtable_free(_uit_hashtable);
 }
 
 void __uit_register(ktDescriptor* kt, UITDescriptor* uit){
     uit->type=kt;
-    Hashtable_add(__uit_hashtable, cptr_copy(kt->name), UniStackPtr(UITDescriptor, uit));
+    Hashtable_add(_uit_hashtable, cptr_copy(kt->name), UniStackPtr(UITDescriptor, uit));
 }
 
 UITDescriptor* UITDescriptor_getById(ktid id){
@@ -43,7 +43,12 @@ UITDescriptor* UITDescriptor_getById(ktid id){
 
 ///@return NULL if not found
 UITDescriptor* UITDescriptor_getByName(char* name){
-    Unitype val=Hashtable_get(__uit_hashtable, name);
+    Unitype val=Hashtable_get(_uit_hashtable, name);
+    if(Unitype_isUniNull(val)){
+        char* name_ptr=cptr_concat(name,"_Ptr");
+        val=Hashtable_get(_uit_hashtable, name_ptr);
+        free(name_ptr);
+    }
     return val.VoidPtr;
 }
 

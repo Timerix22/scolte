@@ -48,11 +48,14 @@ typedef struct UIContext UIContext;
 
 void UIContext_destroy(UIContext* u);
 
+
+UI_Maybe UIContext_getAny(UIContext* context, char* name);
+
 ///@return UI_Maybe<UIElement*> 
 UI_THROWING_FUNC_DECL(_UIContext_get(UIContext* context, char* name, ktid type_id));
 #define UIContext_get(CONTEXT, NAMESPACE, NAME, TYPE, FREECALLS_ON_ERROR) \
     UI_try( \
-        _UIContext_get(CONTEXT, #NAMESPACE "_" #NAME, ktid_name(TYPE)), \
+        _UIContext_get(CONTEXT, #NAMESPACE "_" #NAME, ktid_ptrName(TYPE)), \
         _m_##NAMESPACE##_##NAME, \
         FREECALLS_ON_ERROR); \
     TYPE* NAMESPACE##_##NAME=_m_##NAMESPACE##_##NAME.value.VoidPtr;
