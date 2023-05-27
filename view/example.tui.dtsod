@@ -6,8 +6,8 @@ $ui: {
 	type: "TextBlock",
 	min_width: 4,
 	max_width: 4,
-	width_scaling: 0,
-	height_scaling: 0,
+	width: 20,
+	height: "3",
 	bg_color: "black",
 	fg_color: "white",
 	border: {
@@ -24,6 +24,11 @@ $ui: {
 $ui: {
 	name: "Grid",
 	type: "Grid",
+	row_heights: [
+		"1*",
+		-1,
+	],
+	column_widths: [ "-8*" ],
 	content: [
 		# column
 		[ "example_textblock" ], # row

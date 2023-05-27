@@ -20,11 +20,12 @@ typedef UIElement* UIElement_Ptr;
 typedef struct Renderer Renderer;
 typedef struct DrawingArea DrawingArea;
 
-///@return Maybe<UIElement_Ptr>
+///@return Maybe<void>
 typedef UI_THROWING_FUNC_DECL( (*UIElement_draw_t)(Renderer* renderer, UIElement_Ptr self, const DrawingArea area) );
-
 ///@return Maybe<UIElement_Ptr>
 typedef UI_THROWING_FUNC_DECL( (*UIElement_deserialize_t)(Dtsod* dtsod) );
+///@return Maybe<void>
+typedef UI_THROWING_FUNC_DECL( (*UIElement_onBuildUIContext_t)(UIElement* self, UIContext* context) );
 
 
 //////////////////////////////////////
@@ -32,17 +33,19 @@ typedef UI_THROWING_FUNC_DECL( (*UIElement_deserialize_t)(Dtsod* dtsod) );
 //////////////////////////////////////
 
 STRUCT(UITDescriptor,
-    ktDescriptor* type;
+    ktDescriptor* kt;
     UIElement_draw_t draw;
     UIElement_deserialize_t deserialize;
+    UIElement_onBuildUIContext_t onBuild;
 )
 
 #define uit_declare(TYPE) extern UITDescriptor UITDescriptor_##TYPE;
 
-#define uit_define(TYPE, FREE_F, TOSTRING_F, DRAW_F, DESERIALIZE_F) kt_define(TYPE, FREE_F, TOSTRING_F) \
+#define uit_define(TYPE, FREE_F, TOSTRING_F, DRAW_F, DESERIALIZE_F, ON_BUILD_F) kt_define(TYPE, FREE_F, TOSTRING_F) \
     UITDescriptor UITDescriptor_##TYPE={ \
         .draw=DRAW_F, \
-        .deserialize=DESERIALIZE_F \
+        .deserialize=DESERIALIZE_F, \
+        .onBuild=ON_BUILD_F \
     };
 
 /// call this between kt_beginInit() and kt_endInit()
@@ -73,6 +76,14 @@ PACKED_ENUM(UIBorderThickness,
 //////////////////////////////////////
 //          Small structs           //
 //////////////////////////////////////
+
+typedef i16 ScalingSize;
+
+#define is_size_scaling(SZ) (SZ<0)
+#define size_enable_scaling(SZ) (SZ < 0 ? SZ : (-1*SZ))
+#define size_disable_scaling(SZ) (SZ >= 0 ? SZ : (-1*SZ))
+///@return Maybe<void>
+UI_THROWING_FUNC_DECL( ScalingSize_fromUnitype(Unitype UNI, ScalingSize* SZ_VAR) );
 
 STRUCT(DrawingArea,
     /* right-top corner */
@@ -123,25 +134,23 @@ UI_THROWING_FUNC_DECL(Renderer_drawBorder(Renderer* renderer, UIBorder border, c
 //////////////////////////////////////
 
 STRUCT(UIElement,
-    UITDescriptor* ui_type;
+    UITDescriptor* type;
     char* name;
     u16 min_width;
     u16 min_height;
-    u16 width_scaling; 
-    u16 height_scaling; 
+    ScalingSize width;
+    ScalingSize height;
     termcolor color;
     UIBorder border;
 )
 Autoarr_declare(UIElement_Ptr)
 Array_declare(UIElement)
 
-#define UIElement_no_scaling (u16)0
-
 /// proper way to free UIElement and all its members 
 void UIElement_destroy(UIElement_Ptr self);
 
 #define UIElement_draw(RENDERER, UIE_PTR, PLACE_RECT) \
-    (UIE_PTR)->ui_type->draw(RENDERER, UIE_PTR, PLACE_RECT)
+    (UIE_PTR)->type->draw(RENDERER, UIE_PTR, PLACE_RECT)
 
 
 //////////////////////////////////////
@@ -154,25 +163,24 @@ STRUCT(Grid,
     UIElement base;
     u16 columns;
     u16 rows;
-    bool is_bound;
+    ScalingSize* row_heights;
+    ScalingSize* column_widths;
     char** content_names;
     UIElement_Ptr* content; /* UIElement[rows][columns] */
 )
 uit_declare(Grid);
 
-Grid* Grid_create(char* name, u16 columns, u16 rows, UIElement_Ptr* content);
+Grid* Grid_create(char* name, u16 columns, u16 rows, ScalingSize* column_widths, ScalingSize* row_heights, UIElement_Ptr* content);
 ///@return Maybe<UIElement*>
 UI_THROWING_FUNC_DECL( Grid_get(Grid* grid, u16 column, u16 row) );
 ///@return maybe<void>
 UI_THROWING_FUNC_DECL( Grid_set(Grid* grid, u16 column, u16 row, UIElement_Ptr value));
 ///@return Maybe<char*>
 UI_THROWING_FUNC_DECL( _Grid_getName(Grid* grid, u16 column, u16 row) );
-///@return maybe<void>
-UI_THROWING_FUNC_DECL( _Grid_bindContent(Grid* grid, UIContext* context) );
 
 #define Grid_foreach(GRID, ELEM_VAR_NAME, CODE...) { \
-    if(!GRID->is_bound) \
-        UI_safethrow_msg(cptr_concat("grid '", GRID->base.ui_type->type->name, \
+    if(!GRID->content) \
+        UI_safethrow_msg(cptr_concat("grid '", GRID->base.type->kt->name, \
         "' content has not been bound"),;); \
     for(u16 _g_r = 0; _g_r < GRID->rows; _g_r++){ \
         for(u16 _g_c = 0; _g_c < GRID->columns; _g_c++){ \
@@ -184,8 +192,8 @@ UI_THROWING_FUNC_DECL( _Grid_bindContent(Grid* grid, UIContext* context) );
 }
 
 #define Grid_foreachName(GRID, ELEM_VAR_NAME, CODE...) { \
-    if(GRID->is_bound) \
-        UI_safethrow_msg(cptr_concat("grid '", GRID->base.ui_type->type->name, \
+    if(!GRID->content_names) \
+        UI_safethrow_msg(cptr_concat("grid '", GRID->base.type->kt->name, \
         "' content has been already bound"),;); \
     for(u16 _g_r = 0; _g_r < GRID->rows; _g_r++){ \
         for(u16 _g_c = 0; _g_c < GRID->columns; _g_c++){ \

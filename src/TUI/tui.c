@@ -3,7 +3,53 @@
 
 kt_define(DrawingArea, NULL, NULL);
 kt_define(UIBorder, NULL, NULL);
-kt_define(UITDescriptor, NULL, NULL);
+
+UI_Maybe ScalingSize_fromUnitype(Unitype UNI, ScalingSize* SZ_VAR){
+    if(UniCheckType(UNI, i64)){
+            *SZ_VAR=UNI.Int64;
+    } else if(UniCheckTypePtr(UNI, char)){
+        char* _sz_str=UNI.VoidPtr;
+        u32 len=cptr_length(_sz_str);
+        bool has_asterisk=_sz_str[len-1]=='0';
+        if(has_asterisk)
+            _sz_str[len-1]=0;
+        int _sz=0;
+        if(sscanf(_sz_str, "%i", &_sz)!=1)
+            UI_safethrow(UIError_InvalidFormat, ;);
+        if(has_asterisk)
+            _sz=size_enable_scaling(_sz);
+        *SZ_VAR=_sz;
+    } else UI_safethrow_msg(
+        cptr_concat("expected type i64 or char*, but has got type id '",
+        toString_i64(UNI.typeId), "'"),;);
+    return MaybeNull;
+}
+
+//////////////////////////////////////
+//         TUI type system          //
+//////////////////////////////////////
+char* UITDescriptor_toString(UITDescriptor* d){
+    const char* n="NULL";
+    char *s0=ktDescriptor_toString(d->kt);
+    char *s1= d->draw ? toString_hex(d->draw, sizeof(void*), 0,1,0) : n;
+    char *s2= d->deserialize ? toString_hex(d->deserialize, sizeof(void*), 0,1,0) : n;
+    char *s3= d->onBuild ? toString_hex(d->onBuild, sizeof(void*), 0,1,0) : n;
+    char* rez=cptr_concat("UITDescriptor { ",
+        s0,
+        " draw:",s1,
+        " deserialize:",s2,
+        " onBuild:",s3,
+        " }");
+    if(s0!=n) free(s0);
+    if(s1!=n) free(s1);
+    if(s2!=n) free(s2);
+    if(s3!=n) free(s3);
+    return rez;
+}
+
+char* _UITDescriptor_toString(void* _d, u32 fmt){ return UITDescriptor_toString(_d); }
+
+kt_define(UITDescriptor, NULL, _UITDescriptor_toString);
 
 Hashtable* _uit_hashtable=NULL;
 u32 __kt_id_first=-1;
@@ -29,7 +75,7 @@ void kt_freeTUI(){
 }
 
 void __uit_register(ktDescriptor* kt, UITDescriptor* uit){
-    uit->type=kt;
+    uit->kt=kt;
     Hashtable_add(_uit_hashtable, cptr_copy(kt->name), UniStackPtr(UITDescriptor, uit));
 }
 

@@ -1,5 +1,26 @@
 #include "tui_internal.h"
 
+void UIElement_appendToStringBuilder(StringBuilder* sb, UIElement_Ptr u){
+    char *s0;
+    addsf(u,name) addc(' ')
+    adds((s0=UITDescriptor_toString(u->type)));
+    adduf(u,min_width)
+    adduf(u,min_height)
+    addif(u,width)
+    addif(u,height)
+    adds(" color:") adds(kp_bgColor_toString(u->color))
+        addc('|') adds(kp_fgColor_toString(u->color))
+    adds(" border { t:") addu(u->border.top)
+        adds(" b:") addu(u->border.bottom)
+        adds(" l:") addu(u->border.left)
+        adds(" r:") addu(u->border.right)
+        adds(" color:") adds(kp_bgColor_toString(u->color))
+            addc('|') adds(kp_fgColor_toString(u->color))
+        adds(" }")
+    free(s0);
+}
+
+
 kt_define(UIElement, NULL, NULL);
 Autoarr_define(UIElement_Ptr, true);
 Array_define(UIElement);
@@ -8,11 +29,11 @@ Array_define(UIElement);
 inline UIElement _UIElement_initBaseDefault(char* name, UITDescriptor* uit){
     return (UIElement){
         .name=name,
-        .ui_type=uit,
+        .type=uit,
         .min_width=2,
         .min_height=2,
-        .width_scaling=UIElement_no_scaling,
-        .height_scaling=UIElement_no_scaling,
+        .width=size_enable_scaling(1),
+        .height=size_enable_scaling(1),
         .color=kp_bgBlack|kp_fgGray,
         .border={
             .left=UIBorder_Thin, .right=UIBorder_Thin,
@@ -23,8 +44,8 @@ inline UIElement _UIElement_initBaseDefault(char* name, UITDescriptor* uit){
 }
 
 void UIElement_destroy(UIElement_Ptr self){
-    if(self->ui_type->type->freeMembers)
-        self->ui_type->type->freeMembers(self);
+    if(self->type->kt->freeMembers)
+        self->type->kt->freeMembers(self);
     free(self);
 }
 
@@ -50,16 +71,16 @@ UI_Maybe UIElement_deserializeBase(Dtsod* dtsod, UIElement* base){
 
     char* type_name;
     Dtsod_tryGet_cptr(dtsod, "type", type_name, true);
-    UITDescriptor* ui_type=UITDescriptor_getByName(type_name);
-    if(ui_type==NULL)
+    UITDescriptor* type=UITDescriptor_getByName(type_name);
+    if(type==NULL)
         UI_safethrow_msg(cptr_concat("invalid type '", type_name, "'"), ;);
         
-    *base=_UIElement_initBaseDefault(name, ui_type);
+    *base=_UIElement_initBaseDefault(cptr_copy(name), type);
 
     Dtsod_tryGet_i64(dtsod, "min_width", base->min_width, false);
     Dtsod_tryGet_i64(dtsod, "min_height", base->min_height, false);
-    Dtsod_tryGet_i64(dtsod, "width_scaling", base->width_scaling, false);
-    Dtsod_tryGet_i64(dtsod, "height_scaling", base->height_scaling, false);
+    Dtsod_tryGet_ScalingSize(dtsod, "width", base->width, false);
+    Dtsod_tryGet_ScalingSize(dtsod, "height", base->height, false);
     char *bg_color_name, *fg_color_name;
     Dtsod_tryGet_cptr(dtsod, "bg_color", bg_color_name, false,
         set_color(bg_color_name, base->color);

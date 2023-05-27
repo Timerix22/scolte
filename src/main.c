@@ -43,6 +43,20 @@ UI_Maybe test_example_ui_build() {
     UIDtsodParser_destroy(p);
     UIContext_get(ui_context, example, textblock, TextBlock, UIContext_destroy(ui_context));
     example_textblock->text=string_fromCptr("text replaced");
+    u32 n=0;
+    Hashtable_foreach(ui_context->ui_elements, el_pair,
+        UIElement* el=el_pair.value.VoidPtr;
+        toString_t elToString=el->type->kt->toString;
+        if(elToString){
+            char* str_tmp=elToString(el,0); 
+            char* str=cptr_replace(str_tmp, " ", "\n");
+            kprintf("[%u] %s\n", n, str);
+            free(str_tmp);
+            free(str);
+        }
+        else kprintf("[%u] %s\n", n, el->name);
+        n++;
+    );
     UIContext_destroy(ui_context);
     return MaybeNull;
 }
@@ -97,7 +111,9 @@ i32 main(const i32 argc, const char* const* argv){
     
     // TODO signal( SIGWINCH, redraw );
 
-    tryLast(test_example_ui_build(), _6981751, on_exit());
+    for(u32 n=0; n<1; n++){
+        tryLast(test_example_ui_build(), _6981751, on_exit());
+    }
     
     on_exit();
     return 0;

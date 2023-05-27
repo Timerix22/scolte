@@ -13,7 +13,9 @@ PACKED_ENUM(UIError,
     UIError_InvalidHeight, UIError_InvalidWidth,
     UIError_InvalidX, UIError_InvalidY,
     UIError_PrintError,
-    UIError_InvalidVersion
+    UIError_InvalidVersion,
+    UIError_InvalidGrid,
+    UIError_InvalidFormat
 )
 
 // this macros can be changed later to improve debugging

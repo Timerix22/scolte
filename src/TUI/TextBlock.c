@@ -31,8 +31,17 @@ UI_Maybe TextBlock_deserialize(Dtsod* dtsod){
     return SUCCESS(UniHeapPtr(TextBlock, ptr));
 }
 
+char* TextBlock_toString(void* _tb, kp_fmt fmt){
+    TextBlock* tb=_tb;
+    StringBuilder* sb=StringBuilder_create();
+    adds("TextBlock {")
+    UIElement_appendToStringBuilder(sb, &tb->base);
+    addstrf(tb,text)
+    adds(" }")
+    return StringBuilder_build(sb).ptr;
+}
 
-uit_define(TextBlock, TextBlock_freeMembers, NULL,TextBlock_draw, TextBlock_deserialize);
+uit_define(TextBlock, TextBlock_freeMembers, TextBlock_toString, TextBlock_draw, TextBlock_deserialize, NULL);
 
 TextBlock* TextBlock_create(char* name, string text){
     TextBlock* textBlock=malloc(sizeof(TextBlock));

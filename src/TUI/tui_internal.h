@@ -5,6 +5,7 @@ extern "C" {
 #endif
 
 #include "tui.h"
+#include "../../kerep/src/String/StringBuilder.h"
 
 extern UIElement _UIElement_initBaseDefault(char* name, UITDescriptor* type);
 
@@ -44,6 +45,23 @@ int UIBorderThickness_getByName(char* name);
         UI_safethrow(cptr_concat("incorrect UIBorderThickness name: ", name), ;); \
     var=(UIBorderThickness)th; \
 }
+
+
+#define addstr(V) StringBuilder_append_string(sb, V);
+#define addstrf(O,F) adds(" "#F":'") addstr(O->F) addc('\'')
+#define adds(V) StringBuilder_append_cptr(sb, V);
+#define addsf(O,F) adds(" "#F":'") adds(O->F) addc('\'')
+#define addc(V) StringBuilder_append_char(sb, V);
+#define addcf(O,F) adds(" "#F":") addc(O->F)
+#define addi(V) StringBuilder_append_i64(sb, V);
+#define addif(O,F) adds(" "#F":") addi(O->F)
+#define addu(V) StringBuilder_append_u64(sb, V);
+#define adduf(O,F) adds(" "#F":") addu(O->F)
+#define addf(V) StringBuilder_append_f64(sb, V);
+#define addff(O,F) adds(" "#F":") addf(O->F)
+
+char* UITDescriptor_toString(UITDescriptor* d);
+void UIElement_appendToStringBuilder(StringBuilder* sb, UIElement_Ptr u);
 
 #if __cplusplus
 }

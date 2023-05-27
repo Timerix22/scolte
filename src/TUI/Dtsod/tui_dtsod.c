@@ -66,7 +66,22 @@ UI_Maybe UIDtsodParser_parseText(UIDtsodParser* parser, char* file_name_placehol
     return MaybeNull;
 }
 
+UI_Maybe UIElement_deserialize(Dtsod* dtsod){
+    char* type_name;
+    Dtsod_tryGet_cptr(dtsod, "type", type_name, true);
+    UITDescriptor* type=UITDescriptor_getByName(type_name);
+    if(type==NULL)
+        UI_safethrow_msg(cptr_concat("invalid type '", type_name, "'"), ;);
+    if(type->deserialize==NULL)
+        UI_safethrow(UIError_NullPtr, ;);
+    UI_try(type->deserialize(dtsod), _m_ui, ;);
+    return _m_ui;
+}
 
+
+//////////////////////////////////////
+//            UIContext             //
+//////////////////////////////////////
 
 void _UIContext_freeMembers(void* _u){
     UIContext* u=_u;
@@ -79,17 +94,6 @@ void UIContext_destroy(UIContext* u){
 }
 
 kt_define(UIContext, _UIContext_freeMembers, NULL);
-
-
-UI_Maybe UIElement_deserialize(Dtsod* dtsod){
-    char* type_name;
-    Dtsod_tryGet_cptr(dtsod, "type", type_name, true);
-    UITDescriptor* ui_type=UITDescriptor_getByName(type_name);
-    if(ui_type==NULL)
-        UI_safethrow_msg(cptr_concat("invalid type '", type_name, "'"), ;);
-    UI_try(ui_type->deserialize(dtsod), _m_ui, ;);
-    return _m_ui;
-}
 
 UI_Maybe UIDtsodParser_constructUIContext(UIDtsodParser* parser){
     if(parser->context == NULL){
@@ -107,14 +111,16 @@ UI_Maybe UIDtsodParser_constructUIContext(UIDtsodParser* parser){
         char* file_namespace;
         Dtsod_tryGet_cptr(fm.dtsod, "namespace", file_namespace, true);
         Hashtable_foreach(fm.dtsod, dtsod_elem,
-            if(cptr_compare(dtsod_elem.key, "ui")) {
+            if(cptr_equals(dtsod_elem.key, "ui")) {
+                if(!UniCheckTypePtr(dtsod_elem.value, Autoarr(Unitype)))
+                    UI_safethrow(UIError_InvalidFormat, ;);
                 Autoarr_Unitype* ui_ar=dtsod_elem.value.VoidPtr;
                 Autoarr_foreach(ui_ar, ui_el_dtsod,
                     UI_try(UIElement_deserialize(ui_el_dtsod.VoidPtr),_m_ui,;);
                     UIElement_Ptr new_el=_m_ui.value.VoidPtr;
-                    // kprintf("[UIDtsodParser_constructUIContext] %s : %s\n", new_el->name, new_el->ui_type->type->name);
-                    if(new_el->ui_type->type->id==ktid_ptrName(Grid)){
-                        UI_try(_Grid_bindContent((Grid*)new_el, parser->context),_15151,;);
+                    // kprintf("[UIDtsodParser_constructUIContext] %s : %s\n", new_el->name, new_el->type->kt->name);
+                    if(new_el->type->onBuild){
+                        UI_try(new_el->type->onBuild(new_el, parser->context),_15151,;);
                     }
                     UI_try( UIContext_add(parser->context, file_namespace, new_el), _a76515, ;);
                 );
@@ -140,16 +146,16 @@ UI_Maybe UIContext_getAny(UIContext* context, char* name){
 UI_Maybe _UIContext_get(UIContext* context, char* name, ktid type_id){
     UI_try(UIContext_getAny(context, name), _m_ui, ;);
     UIElement* ptr=_m_ui.value.VoidPtr;
-    if(ptr->ui_type->type->id != type_id)
+    if(ptr->type->kt->id != type_id)
         UI_safethrow_msg(cptr_concat(
-            "tried to get ",ktDescriptor_get(type_id)->name, " <",name,"> but it is of type ", ptr->ui_type->type->name
+            "tried to get ",ktDescriptor_get(type_id)->name, " <",name,"> but it is of type ", ptr->type->kt->name
             ), ;);
     return _m_ui;
 }
 
 UI_Maybe UIContext_add(UIContext* context, char* namespace, _UIElement_Ptr _new_el){
     UIElement_Ptr new_el=_new_el;
-    Unitype u=UniPtr(new_el->ui_type->type->id, new_el, true);
+    Unitype u=UniPtr(new_el->type->kt->id, new_el, true);
     char* namespace_and_name=cptr_concat(namespace, "_", new_el->name);
     if(!Hashtable_tryAdd(context->ui_elements, namespace_and_name, u))
         UI_safethrow_msg(cptr_concat("element with name <", new_el->name, "> already exists in context"), 

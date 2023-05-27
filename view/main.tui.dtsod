@@ -1,12 +1,17 @@
 parser_version: 1;
 namespace: "main";
 
-$ui: {
-	name: "main_grid",
-	type: "Grid",
-	content: [
-		# column
-#		[ "namespace.element0" ], # row
-#		[ "namespace.element1" ], # row
-	];
-};
+# $ui: {
+# 	name: "main_grid",
+# 	type: "Grid",
+# 	row_heights: [
+# 		"1*",
+# #		-1,
+# #	],
+# #	column_widths: [ "-8*" ],
+# 	content: [
+# 		# column
+# #		[ "namespace.element0" ], # row
+# #		[ "namespace.element1" ], # row
+# 	];
+# };

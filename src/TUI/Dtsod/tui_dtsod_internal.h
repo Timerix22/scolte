@@ -15,7 +15,3 @@ STRUCT(UIDtsodParser,
     UIContext* context;
     bool returned_context;
 )
-
-STRUCT(UIContext,
-    Hashtable* ui_elements;
-)
